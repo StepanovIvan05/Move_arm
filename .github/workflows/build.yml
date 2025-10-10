@@ -33,14 +33,14 @@ jobs:
         shell: pwsh
         run: |
           mkdir output
-          & "C:\Program Files\Microsoft\jdk-21\bin\jpackage.exe" `
-            --input target `
+          jpackage --input target `
             --main-jar Move_arm-1.0-SNAPSHOT.jar `
             --main-class com.example.move_arm.HelloApplication `
             --name MoveArm `
             --app-version 1.0 `
             --type exe `
             --dest output
+      
 
       # ---- macOS package (.dmg) ----
       - name: Package for macOS
