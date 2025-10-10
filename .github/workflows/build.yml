@@ -43,7 +43,6 @@ jobs:
             --app-version 1.0 `
             --type exe `
             --dest output `
-            --icon src/main/resources/icon.ico `
             --win-menu `
             --win-menu-group "Move Arm" `
             --win-shortcut `
