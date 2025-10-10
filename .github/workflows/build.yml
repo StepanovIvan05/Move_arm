@@ -33,15 +33,23 @@ jobs:
         shell: pwsh
         run: |
           mkdir output
-          jpackage `
+          $JPACKAGE = "${env:JAVA_HOME}\bin\jpackage.exe"
+
+          & $JPACKAGE `
             --input target `
             --main-jar Move_arm-1.0-SNAPSHOT.jar `
             --main-class com.example.move_arm.HelloApplication `
-            --name MoveArm `
+            --name "MoveArm" `
             --app-version 1.0 `
             --type exe `
             --dest output `
-            --java-options "--module-path target/lib --add-modules javafx.controls,javafx.fxml"
+            --icon src/main/resources/icon.ico `
+            --win-menu `
+            --win-menu-group "Move Arm" `
+            --win-shortcut `
+            --win-dir-chooser `
+            --runtime-image "${env:JAVA_HOME}" `
+            --java-options "--add-modules javafx.controls,javafx.fxml"
 
       # ---- macOS package (.dmg) ----
       - name: Package for macOS
