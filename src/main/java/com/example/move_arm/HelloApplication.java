@@ -2,44 +2,44 @@ package com.example.move_arm;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.logging.Logger;
 
 public class HelloApplication extends Application {
-
-    private static void log(String message) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("MoveArm.log", true))) {
-            writer.println(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final Logger logger = AppLogger.getLogger();
 
     @Override
     public void start(Stage stage) {
         try {
-            log("=== Приложение запускается ===");
-            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("start_window.fxml"));
-            Scene scene = new Scene(fxmlLoader.load(), 600, 400);
-            stage.setTitle("Move Arm — Управление рукой");
+            logger.info("Загрузка FXML: start-window.fxml");
+
+            FXMLLoader fxmlLoader = new FXMLLoader(
+                    HelloApplication.class.getResource("start-window.fxml")
+            );
+            Parent root = fxmlLoader.load();
+
+            Scene scene = new Scene(root, 800, 600);
+            stage.setTitle("Move Arm - Управление рукой");
             stage.setScene(scene);
             stage.show();
-            log("Окно успешно показано");
-        } catch (Exception e) {
-            log("Ошибка запуска: " + e.getMessage());
-            for (StackTraceElement el : e.getStackTrace()) {
-                log("    at " + el);
-            }
+
+            logger.info("Окно успешно отображено.");
+
+        } catch (IOException e) {
+            logger.severe("Ошибка при загрузке интерфейса: " + e.getMessage());
             e.printStackTrace();
+        } catch (Exception ex) {
+            logger.severe("Неожиданная ошибка: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
-        log("main() запущен");
+        logger.info("Запуск приложения...");
         launch();
     }
 }
