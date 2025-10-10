@@ -2,6 +2,7 @@ module com.example.move_arm {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.web;
+    requires javafx.graphics;
 
     requires org.controlsfx.controls;
     requires org.kordamp.ikonli.javafx;
@@ -11,4 +12,5 @@ module com.example.move_arm {
 
     opens com.example.move_arm to javafx.fxml;
     exports com.example.move_arm;
+    
 }
