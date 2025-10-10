@@ -1,0 +1,60 @@
+name: Build JavaFX App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build and Package JavaFX App
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Package with jpackage
+        run: |
+          mkdir output
+          jpackage \
+            --input target \
+            --main-jar yourapp.jar \
+            --name Move_arm \
+            --app-version 1.0.0 \
+            --type dmg \
+            --dest output \
+            --icon src/main/resources/icon.icns
+        if: matrix.os == 'macos-latest'
+
+      - name: Package with jpackage (Windows)
+        run: |
+          mkdir output
+          jpackage ^
+            --input target ^
+            --main-jar yourapp.jar ^
+            --name RehabGame ^
+            --app-version 1.0.0 ^
+            --type exe ^
+            --dest output ^
+            --icon src/main/resources/icon.ico
+        if: matrix.os == 'windows-latest'
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Move_arm-${{ matrix.os }}
+          path: output
