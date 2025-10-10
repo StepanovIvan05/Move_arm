@@ -1,41 +1,40 @@
 package com.example.move_arm;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.io.*;
+import java.nio.file.*;
+import java.time.LocalDateTime;
 
-/**
- * Утилита для логирования в файл.
- */
 public class AppLogger {
-    private static Logger logger;
+    private static PrintWriter writer;
 
-    public static Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger("MoveArmLogger");
-
-            try {
-                Path logDir = Path.of(System.getProperty("user.home"), ".move_arm_logs");
-                if (!Files.exists(logDir)) {
-                    Files.createDirectories(logDir);
-                }
-
-                Path logFile = logDir.resolve("move_arm.log");
-                FileHandler handler = new FileHandler(logFile.toString(), true);
-                handler.setFormatter(new SimpleFormatter());
-                logger.addHandler(handler);
-
-                logger.setLevel(Level.ALL);
-                logger.info("=== Приложение запущено ===");
-
-            } catch (IOException e) {
-                e.printStackTrace();
+    static {
+        try {
+            // Папка для логов в AppData
+            String appData = System.getenv("APPDATA");
+            Path logDir = Paths.get(appData, "MoveArm");
+            if (!Files.exists(logDir)) {
+                Files.createDirectories(logDir);
             }
+
+            // Лог-файл
+            Path logFile = logDir.resolve("log.txt");
+            writer = new PrintWriter(new FileWriter(logFile.toFile(), true), true);
+            log("=== Приложение запущено ===");
+        } catch (IOException e) {
+            System.err.println("Не удалось создать лог-файл: " + e.getMessage());
         }
-        return logger;
+    }
+
+    public static void log(String message) {
+        if (writer != null) {
+            writer.println(LocalDateTime.now() + " | " + message);
+        }
+    }
+
+    public static void logError(String message, Throwable throwable) {
+        if (writer != null) {
+            writer.println(LocalDateTime.now() + " | ERROR: " + message);
+            throwable.printStackTrace(writer);
+        }
     }
 }
