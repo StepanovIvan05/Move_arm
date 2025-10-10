@@ -18,7 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up JDK 21 (Temurin)
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -27,7 +27,9 @@ jobs:
       - name: Build with Maven
         run: mvn -B clean package
 
-      # ---- Windows package (.exe) ----
+      # --------------------------
+      # WINDOWS (.exe installer)
+      # --------------------------
       - name: Package for Windows
         if: matrix.os == 'windows-latest'
         shell: pwsh
@@ -48,9 +50,12 @@ jobs:
             --win-shortcut `
             --win-dir-chooser `
             --runtime-image "${env:JAVA_HOME}" `
-            --java-options "--add-modules javafx.controls,javafx.fxml"
+            --java-options "--add-modules javafx.controls,javafx.fxml" `
+            --icon src/main/resources/icon.ico
 
-      # ---- macOS package (.dmg) ----
+      # --------------------------
+      # MACOS (.dmg installer)
+      # --------------------------
       - name: Package for macOS
         if: matrix.os == 'macos-latest'
         run: |
@@ -63,9 +68,13 @@ jobs:
             --app-version 1.0 \
             --type dmg \
             --dest output \
-            --java-options "--module-path target/lib --add-modules javafx.controls,javafx.fxml"
+            --runtime-image "${JAVA_HOME}" \
+            --java-options "--add-modules javafx.controls,javafx.fxml" \
+            --icon src/main/resources/icon.icns
 
-      # ---- Upload artifacts ----
+      # --------------------------
+      # UPLOAD RESULT
+      # --------------------------
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
