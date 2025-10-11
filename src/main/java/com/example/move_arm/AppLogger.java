@@ -1,40 +1,23 @@
 package com.example.move_arm;
 
-import java.io.*;
-import java.nio.file.*;
-import java.time.LocalDateTime;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class AppLogger {
-    private static PrintWriter writer;
 
-    static {
-        try {
-            // Папка для логов в AppData
-            String appData = System.getenv("APPDATA");
-            Path logDir = Paths.get(appData, "MoveArm");
-            if (!Files.exists(logDir)) {
-                Files.createDirectories(logDir);
-            }
-
-            // Лог-файл
-            Path logFile = logDir.resolve("log.txt");
-            writer = new PrintWriter(new FileWriter(logFile.toFile(), true), true);
-            log("=== Приложение запущено ===");
-        } catch (IOException e) {
-            System.err.println("Не удалось создать лог-файл: " + e.getMessage());
-        }
-    }
+    private static final Path LOG_FILE =
+            Path.of(System.getenv("APPDATA"), "MoveArm", "log.txt");
 
     public static void log(String message) {
-        if (writer != null) {
-            writer.println(LocalDateTime.now() + " | " + message);
-        }
-    }
-
-    public static void logError(String message, Throwable throwable) {
-        if (writer != null) {
-            writer.println(LocalDateTime.now() + " | ERROR: " + message);
-            throwable.printStackTrace(writer);
+        try {
+            Files.createDirectories(LOG_FILE.getParent());
+            try (FileWriter writer = new FileWriter(LOG_FILE.toFile(), true)) {
+                writer.write(java.time.LocalDateTime.now() + " - " + message + System.lineSeparator());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

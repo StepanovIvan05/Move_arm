@@ -40,7 +40,7 @@ jobs:
           & $JPACKAGE `
             --input target `
             --main-jar Move_arm-1.0-SNAPSHOT.jar `
-            --main-class com.example.move_arm.HelloApplication `
+            --main-class com.example.move_arm.Launcher `
             --name "MoveArm" `
             --app-version 1.0 `
             --type exe `
@@ -63,7 +63,7 @@ jobs:
           jpackage \
             --input target \
             --main-jar Move_arm-1.0-SNAPSHOT.jar \
-            --main-class com.example.move_arm.HelloApplication \
+            --main-class com.example.move_arm.Launcher \
             --name MoveArm \
             --app-version 1.0 \
             --type dmg \

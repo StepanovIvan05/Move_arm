@@ -5,32 +5,26 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import java.io.IOException;
 
 public class HelloApplication extends Application {
-
     @Override
     public void start(Stage stage) {
+        AppLogger.log("Инициализация JavaFX Stage...");
         try {
-            AppLogger.log("Загрузка интерфейса...");
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("start-window.fxml"));
             Parent root = loader.load();
-
-            AppLogger.log("FXML успешно загружен.");
 
             Scene scene = new Scene(root, 800, 600);
             stage.setTitle("Move Arm - Управление рукой");
             stage.setScene(scene);
             stage.show();
 
-            AppLogger.log("Главное окно показано.");
-        } catch (Exception e) {
-            AppLogger.logError("Ошибка при запуске приложения", e);
-        }
-    }
+            AppLogger.log("Окно успешно отображено.");
 
-    public static void main(String[] args) {
-        AppLogger.log("Инициализация приложения...");
-        launch();
+        } catch (IOException e) {
+            AppLogger.log("Ошибка при загрузке FXML: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

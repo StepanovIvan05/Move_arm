@@ -11,14 +11,11 @@ public class StartWindowController {
 
     @FXML
     private void handleStartButton() {
-        AppLogger.log("Нажата кнопка 'Начать'");
-
+        AppLogger.log("Кнопка 'Начать' нажата.");
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Move Arm");
         alert.setHeaderText(null);
-        alert.setContentText("Приложение запущено! Добро пожаловать в систему управления рукой.");
+        alert.setContentText("Приложение запущено! Добро пожаловать!");
         alert.showAndWait();
-
-        AppLogger.log("Показано приветственное сообщение пользователю.");
     }
 }
