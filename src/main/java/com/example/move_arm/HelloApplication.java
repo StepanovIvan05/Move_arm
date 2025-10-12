@@ -12,8 +12,8 @@ public class HelloApplication extends Application {
     public void start(Stage stage) {
         AppLogger.log("Инициализация JavaFX Stage...");
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("start-window.fxml"));
-            Parent root = loader.load();
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/move_arm/start-window.fxml"));
+            Parent root = fxmlLoader.load();
 
             Scene scene = new Scene(root, 800, 600);
             stage.setTitle("Move Arm - Управление рукой");

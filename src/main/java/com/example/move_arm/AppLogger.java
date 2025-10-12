@@ -7,8 +7,15 @@ import java.nio.file.Path;
 
 public class AppLogger {
 
-    private static final Path LOG_FILE =
-            Path.of(System.getenv("APPDATA"), "MoveArm", "log.txt");
+    private static final Path LOG_FILE = initLogPath();
+
+    private static Path initLogPath() {
+        String appData = System.getenv("APPDATA");
+        if (appData == null || appData.isBlank()) {
+            appData = System.getProperty("user.home");
+        }
+        return Path.of(appData, "MoveArm", "log.txt");
+    }
 
     public static void log(String message) {
         try {
