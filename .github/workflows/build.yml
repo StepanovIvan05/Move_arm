@@ -25,17 +25,10 @@ jobs:
         run: mvn -B clean package
 
       - name: Create EXE installer
+        shell: cmd
         run: |
           mkdir output
-          jpackage ^
-            --input target ^
-            --main-jar Move_arm-1.0-SNAPSHOT.jar ^
-            --main-class com.example.move_arm.Launcher ^
-            --name "MoveArm" ^
-            --app-version "1.0" ^
-            --type exe ^
-            --dest output ^
-            --vendor "MoveArm Team"
+          jpackage --input target --main-jar Move_arm-1.0-SNAPSHOT.jar --main-class com.example.move_arm.Launcher --name "MoveArm" --app-version "1.0" --type exe --dest output --vendor "MoveArm Team"
 
       - name: List output files (Windows)
         run: dir output
@@ -67,15 +60,7 @@ jobs:
       - name: Create DMG installer
         run: |
           mkdir output
-          jpackage \
-            --input target \
-            --main-jar Move_arm-1.0-SNAPSHOT.jar \
-            --main-class com.example.move_arm.Launcher \
-            --name "MoveArm" \
-            --app-version "1.0" \
-            --type dmg \
-            --dest output \
-            --vendor "MoveArm Team"
+          jpackage --input target --main-jar Move_arm-1.0-SNAPSHOT.jar --main-class com.example.move_arm.Launcher --name "MoveArm" --app-version "1.0" --type dmg --dest output --vendor "MoveArm Team"
 
       - name: List output files (macOS)
         run: ls -la output/
