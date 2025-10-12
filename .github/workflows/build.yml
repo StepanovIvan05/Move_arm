@@ -7,19 +7,9 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
-    name: Build and Package
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-        include:
-          - os: windows-latest
-            installer-type: exe
-            icon: src/main/resources/icon.ico
-          - os: macos-latest
-            installer-type: dmg
-            icon: src/main/resources/icon.icns
+  build-windows:
+    name: Build for Windows
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -31,44 +21,68 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Create EXE installer
+        run: |
+          mkdir output
+          jpackage ^
+            --input target ^
+            --main-jar Move_arm-1.0-SNAPSHOT.jar ^
+            --main-class com.example.move_arm.Launcher ^
+            --name "MoveArm" ^
+            --app-version "1.0" ^
+            --type exe ^
+            --dest output ^
+            --vendor "MoveArm Team"
+
+      - name: List output files (Windows)
+        run: dir output
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          name: MoveArm-Windows
+          path: output/
+          retention-days: 30
+
+  build-macos:
+    name: Build for macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Build with Maven
-        run: mvn -B clean package --file pom.xml
+        run: mvn -B clean package
 
-      - name: Create output directory
-        run: mkdir -p output
-
-      - name: Create native installer
-        shell: bash
+      - name: Create DMG installer
         run: |
+          mkdir output
           jpackage \
             --input target \
             --main-jar Move_arm-1.0-SNAPSHOT.jar \
             --main-class com.example.move_arm.Launcher \
             --name "MoveArm" \
             --app-version "1.0" \
-            --type ${{ matrix.installer-type }} \
+            --type dmg \
             --dest output \
-            --vendor "MoveArm Team" \
-            --copyright "Copyright 2024" \
-            --description "MoveArm Application" \
-            --java-options "-Xmx512m" \
-            --java-options "--add-modules javafx.controls,javafx.fxml"
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME }}
+            --vendor "MoveArm Team"
 
-      - name: List output files
+      - name: List output files (macOS)
         run: ls -la output/
 
-      - name: Upload Build Artifacts
+      - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MoveArm-${{ matrix.os }}
+          name: MoveArm-macOS
           path: output/
           retention-days: 30
