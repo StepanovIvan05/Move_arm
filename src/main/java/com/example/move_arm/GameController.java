@@ -4,6 +4,7 @@ import java.util.Random;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -13,38 +14,40 @@ public class GameController {
     @FXML
     private Pane gameRoot;
 
+    @FXML
+    private HBox topPanel; // Теперь используется
+
     private Label scoreLabel;
     private int score = 0;
     private int activeCircles = 0;
-    private static final int MAX_CIRCLES = 3; // ← лимит кругов
+    private static final int MAX_CIRCLES = 3;
     private Random random = new Random();
     private boolean sceneReady = false;
 
     @FXML
     public void initialize() {
         scoreLabel = new Label("Очки: 0");
-        scoreLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10;");
-        scoreLabel.setTranslateX(10);
-        scoreLabel.setTranslateY(10);
-        gameRoot.getChildren().add(scoreLabel);
+        scoreLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+        topPanel.getChildren().add(scoreLabel);
 
-        // Слушаем изменения сцены
+        // Слушаем изменения сцены для gameRoot
         gameRoot.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                // Слушаем изменения размеров сцены — это сработает, когда окно отобразится
-                newScene.widthProperty().addListener((wObs, oldW, newW) -> checkAndGenerate());
-                newScene.heightProperty().addListener((hObs, oldH, newH) -> checkAndGenerate());
+                // --- ВАЖНО: Слушаем изменения размера ПАНЕЛИ gameRoot, а не сцены ---
+                gameRoot.widthProperty().addListener((wObs, oldW, newW) -> checkAndGenerate());
+                gameRoot.heightProperty().addListener((hObs, oldH, newH) -> checkAndGenerate());
             }
         });
     }
 
     private void checkAndGenerate() {
+        // Проверяем, готовы ли размеры gameRoot (не сцены!)
         if (sceneReady) return;
 
-        double w = gameRoot.getScene().getWidth();
-        double h = gameRoot.getScene().getHeight();
+        double w = gameRoot.getWidth(); // Получаем ширину ПАНЕЛИ gameRoot
+        double h = gameRoot.getHeight(); // Получаем высоту ПАНЕЛИ gameRoot
 
-        // Ждём, пока размеры станут разумными (> 100)
+        // Ждём, пока размеры ПАНЕЛИ станут разумными (> 100)
         if (w > 100 && h > 100) {
             sceneReady = true;
             while (activeCircles < MAX_CIRCLES) {
@@ -54,15 +57,20 @@ public class GameController {
     }
 
     private void spawnRandomTarget() {
-        double sceneWidth = gameRoot.getScene().getWidth();
-        double sceneHeight = gameRoot.getScene().getHeight();
+        // --- ИСПОЛЬЗУЕМ РАЗМЕРЫ ПАНЕЛИ gameRoot ---
+        double paneWidth = gameRoot.getWidth();  // Вместо gameRoot.getScene().getWidth()
+        double paneHeight = gameRoot.getHeight(); // Вместо gameRoot.getScene().getHeight()
 
         // Дополнительная защита
-        if (sceneWidth <= 0 || sceneHeight <= 0) return;
+        if (paneWidth <= 0 || paneHeight <= 0) {
+             System.out.println("Предупреждение: spawnRandomTarget вызван с нулевыми размерами панели.");
+             return; // Выходим, чтобы избежать деления на ноль
+        }
 
         double radius = 20 + random.nextDouble() * 30;
-        double x = radius + random.nextDouble() * (sceneWidth - 2 * radius);
-        double y = radius + random.nextDouble() * (sceneHeight - 2 * radius);
+        // Генерируем координаты относительно размеров ПАНЕЛИ gameRoot
+        double x = radius + random.nextDouble() * (paneWidth - 2 * radius);
+        double y = radius + random.nextDouble() * (paneHeight - 2 * radius);
 
         Circle circle = new Circle(radius);
         circle.setCenterX(x);
@@ -84,7 +92,6 @@ public class GameController {
             score++;
             scoreLabel.setText("Очки: " + score);
 
-            // Добавляем новый, если меньше лимита
             if (activeCircles < MAX_CIRCLES) {
                 spawnRandomTarget();
             }
