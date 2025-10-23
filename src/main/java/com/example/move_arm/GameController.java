@@ -54,15 +54,15 @@ public class GameController {
     }
 
     private void spawnRandomTarget() {
-        double sceneWidth = 700.0;
-        double sceneHeight = 500.0;
+        double sceneWidth = gameRoot.getScene().getWidth();
+        double sceneHeight = gameRoot.getScene().getHeight();
 
         // Дополнительная защита
         if (sceneWidth <= 0 || sceneHeight <= 0) return;
 
         double radius = 20 + random.nextDouble() * 30;
-        double x = random.nextDouble(sceneWidth);
-        double y = random.nextDouble(sceneHeight);
+        double x = radius + random.nextDouble() * (sceneWidth - 2 * radius);
+        double y = radius + random.nextDouble() * (sceneHeight - 2 * radius);
 
         Circle circle = new Circle(radius);
         circle.setCenterX(x);
