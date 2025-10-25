@@ -20,23 +20,31 @@ public class StartWindowController {
     private StackPane rootPane;
 
     @FXML
+    public void initialize() {
+        AppLogger.info("StartWindowController: Контроллер инициализирован");
+    }
+
+    @FXML
     private void handleStartButton(ActionEvent event) {
-        AppLogger.log("Кнопка 'Начать' нажата.");
+        AppLogger.info("StartWindowController: Нажата кнопка 'Начать'");
+
         try {
-            // Получаем текущую сцену и её Stage
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
-            // Загружаем игровую сцену
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/move_arm/game-view.fxml"));
             Scene gameScene = new Scene(loader.load(), 800, 600);
 
-            // Меняем сцену на игровую
             stage.setScene(gameScene);
             stage.setTitle("Move Arm — Игра");
 
+            AppLogger.info("StartWindowController: Успешный переход к игровой сцене");
+
         } catch (IOException e) {
+            AppLogger.error("StartWindowController: Ошибка при загрузке игровой сцены", e);
             e.printStackTrace();
+        } catch (Exception e) {
+            AppLogger.error("StartWindowController: Неожиданная ошибка при переходе к игре", e);
+            throw e;
         }
     }
-
 }
