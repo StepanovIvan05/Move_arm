@@ -220,7 +220,9 @@ public class GameController {
             score++;
             scoreLabel.setText("Очки: " + score);
 
-            clickData.add(new ClickData(System.nanoTime(), event.getX(), event.getY(), x, y, radius));
+            double targetRadius = circle.getRadius() + circle.getStrokeWidth() / 2;
+
+            clickData.add(new ClickData(System.nanoTime(), event.getX(), event.getY(), x, y, targetRadius));
 
             if (activeCircles < MAX_CIRCLES) {
                 spawnRandomTarget();
