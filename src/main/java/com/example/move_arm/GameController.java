@@ -1,9 +1,15 @@
 package com.example.move_arm;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import com.example.move_arm.service.GameService;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -13,7 +19,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class GameController {
@@ -31,10 +36,14 @@ public class GameController {
     private final int gameDuration = 30; // Настраиваемая длительность игры в секундах (можно изменить позже)
     private int activeCircles = 0;
     private static final int MAX_CIRCLES = 3;
-    private Random random = new Random();
+    private final Random random = new Random();
     private boolean sceneReady = false;
     private boolean gameActive = false;
+    private boolean isBeginGeneration = true;
+    private final List<Long> spawnTimes = new ArrayList<>();
     private Timeline timer;
+    private SceneManager sceneManager;
+    private final GameService gameService = GameService.getInstance();
 
     @FXML
     public void initialize() {
@@ -45,21 +54,28 @@ public class GameController {
         timeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
         
         topPanel.getChildren().addAll(scoreLabel, timeLabel);
-        topPanel.setSpacing(20); // Добавим расстояние между лейблами
+        topPanel.setSpacing(20);
 
-        // Слушаем изменения сцены для gameRoot
         gameRoot.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                // --- ВАЖНО: Слушаем изменения размера ПАНЕЛИ gameRoot, а не сцены ---
-                gameRoot.widthProperty().addListener((wObs, oldW, newW) -> checkAndGenerate());
-                gameRoot.heightProperty().addListener((hObs, oldH, newH) -> checkAndGenerate());
+                BooleanBinding ready = Bindings.createBooleanBinding(
+                    () -> gameRoot.getWidth() > 100 && gameRoot.getHeight() > 100,
+                    gameRoot.widthProperty(),
+                    gameRoot.heightProperty()
+                );
+
+                ready.addListener((o, was, isReady) -> {
+                    if (isReady && !sceneReady) {
+                        sceneReady = true;
+                        checkAndGenerate(); // ← РОВНО 1 РАЗ
+                    }
+                });
             }
         });
     }
 
     private void checkAndGenerate() {
         // Проверяем, готовы ли размеры gameRoot (не сцены!)
-        if (sceneReady) return;
 
         double w = gameRoot.getWidth(); // Получаем ширину ПАНЕЛИ gameRoot
         double h = gameRoot.getHeight(); // Получаем высоту ПАНЕЛИ gameRoot
@@ -71,12 +87,18 @@ public class GameController {
         }
     }
 
+    public void setSceneManager(SceneManager manager) {
+        this.sceneManager = manager;
+    }
+
     private void startGame() {
         if (gameActive) return;
         
         gameActive = true;
         score = 0;
         activeCircles = 0;
+        isBeginGeneration = true;
+        spawnTimes.clear();
         remainingTime = gameDuration;
         scoreLabel.setText("Очки: 0");
         timeLabel.setText("Время: " + remainingTime);
@@ -88,7 +110,7 @@ public class GameController {
         while (activeCircles < MAX_CIRCLES) {
             spawnRandomTarget();
         }
-        
+        isBeginGeneration = false;
         // Запускаем таймер
         startTimer();
     }
@@ -119,6 +141,13 @@ public class GameController {
         // Удаляем все круги
         gameRoot.getChildren().removeIf(node -> node instanceof Circle);
         activeCircles = 0;
+
+        // Сохраняем результат в GameService
+        gameService.addResult(score, gameDuration, new ArrayList<>(spawnTimes));
+
+        // Отладка (можно убрать)
+        gameService.printLastResult();
+
         
         // Показываем экран результатов
         showResults();
@@ -140,14 +169,18 @@ public class GameController {
             startGame();
         });
         
-        Button exitButton = new Button("Выход");
-        exitButton.setOnAction(event -> {
-            Stage stage = (Stage) gameRoot.getScene().getWindow();
-            stage.close();
-            // Или System.exit(0); если нужно полностью закрыть приложение
+        Button menuButton = new Button("В меню");
+        menuButton.setOnAction(e -> {
+            AppLogger.info("GameController: Нажата кнопка 'В меню'");
+            try {
+                sceneManager.showStart();
+                AppLogger.info("GameController: Возврат в главное меню успешен");
+            } catch (Exception ex) {
+                AppLogger.error("GameController: Ошибка при возврате в меню", ex);
+            }
         });
         
-        resultsBox.getChildren().addAll(resultLabel, restartButton, exitButton);
+        resultsBox.getChildren().addAll(resultLabel, restartButton, menuButton);
         gameRoot.getChildren().add(resultsBox);
     }
 
@@ -198,5 +231,8 @@ public class GameController {
 
         gameRoot.getChildren().add(circle);
         activeCircles++;
+        if (!isBeginGeneration) {
+            spawnTimes.add(System.nanoTime());
+        }
     }
 }
