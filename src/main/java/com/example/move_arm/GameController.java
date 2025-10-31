@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.example.move_arm.model.ClickData;
 import com.example.move_arm.service.GameService;
 
 import javafx.animation.KeyFrame;
@@ -39,8 +40,7 @@ public class GameController {
     private final Random random = new Random();
     private boolean sceneReady = false;
     private boolean gameActive = false;
-    private boolean isBeginGeneration = true;
-    private final List<Long> spawnTimes = new ArrayList<>();
+    private final List<ClickData> clickData = new ArrayList<>();
     private Timeline timer;
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
@@ -97,8 +97,8 @@ public class GameController {
         gameActive = true;
         score = 0;
         activeCircles = 0;
-        isBeginGeneration = true;
-        spawnTimes.clear();
+        clickData.clear();
+        gameService.clear();
         remainingTime = gameDuration;
         scoreLabel.setText("Очки: 0");
         timeLabel.setText("Время: " + remainingTime);
@@ -110,7 +110,6 @@ public class GameController {
         while (activeCircles < MAX_CIRCLES) {
             spawnRandomTarget();
         }
-        isBeginGeneration = false;
         // Запускаем таймер
         startTimer();
     }
@@ -142,11 +141,8 @@ public class GameController {
         gameRoot.getChildren().removeIf(node -> node instanceof Circle);
         activeCircles = 0;
 
-        // Сохраняем результат в GameService
-        gameService.addResult(score, gameDuration, new ArrayList<>(spawnTimes));
-
-        // Отладка (можно убрать)
-        gameService.printLastResult();
+        gameService.addGameClicks(clickData);
+        gameService.printLastGameSummary();
 
         
         // Показываем экран результатов
@@ -224,6 +220,8 @@ public class GameController {
             score++;
             scoreLabel.setText("Очки: " + score);
 
+            clickData.add(new ClickData(System.nanoTime(), event.getX(), event.getY(), x, y, radius));
+
             if (activeCircles < MAX_CIRCLES) {
                 spawnRandomTarget();
             }
@@ -231,8 +229,5 @@ public class GameController {
 
         gameRoot.getChildren().add(circle);
         activeCircles++;
-        if (!isBeginGeneration) {
-            spawnTimes.add(System.nanoTime());
-        }
     }
 }

@@ -1,14 +1,15 @@
 // service/GameService.java
 package com.example.move_arm.service;
 
-import com.example.move_arm.model.GameResult;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.move_arm.model.ClickData;
+
 public class GameService {
+
     private static final GameService INSTANCE = new GameService();
-    private final List<GameResult> results = new ArrayList<>();
+    private final List<ClickData> allClicks = new ArrayList<>();
 
     private GameService() {}
 
@@ -16,27 +17,52 @@ public class GameService {
         return INSTANCE;
     }
 
-    public void addResult(int score, int duration, List<Long> spawnTimes) {
-        results.add(new GameResult(score, duration, spawnTimes));
+    /**
+     * Добавить клики из одной игры
+     */
+    public void addGameClicks(List<ClickData> clicks) {
+        if (clicks != null && !clicks.isEmpty()) {
+            allClicks.addAll(clicks);
+        }
     }
 
-    public List<GameResult> getAllResults() {
-        return new ArrayList<>(results);
+    /**
+     * Получить все клики из всех игр
+     */
+    public List<ClickData> getAllClicks() {
+        return new ArrayList<>(allClicks);
     }
 
+    /**
+     * Получить клики только из последней игры
+     */
+    public List<ClickData> getLastGameClicks() {
+        if (allClicks.isEmpty()) return new ArrayList<>();
+
+        // Находим начало последней игры: последний клик
+        // (можно улучшить с помощью разделителей, но пока просто всё)
+        return new ArrayList<>(allClicks);
+    }
+
+    /**
+     * Очистить всю статистику
+     */
     public void clear() {
-        results.clear();
+        allClicks.clear();
     }
 
-    // Для отладки (можно удалить позже)
-    public void printLastResult() {
-        if (results.isEmpty()) {
-            System.out.println("Нет результатов");
+    /**
+     * Отладка: вывести статистику по последней игре
+     */
+    public void printLastGameSummary() {
+        List<ClickData> lastGame = getLastGameClicks();
+        if (lastGame.isEmpty()) {
+            System.out.println("Нет данных для анализа");
             return;
         }
-        GameResult last = results.get(results.size() - 1);
-        double avg = com.example.move_arm.model.Statistics.getAverageMs(last.getSpawnTimes());
-        System.out.printf("Последняя игра: Очки=%d, Спавнов=%d, Ср. интервал=%.1f мс%n",
-                last.getScore(), last.getSpawnTimes().size(), avg);
+
+        String summary = com.example.move_arm.model.Statistics.getSummary(lastGame);
+        System.out.println("СТАТИСТИКА ПОСЛЕДНЕЙ ИГРЫ:");
+        System.out.println(summary);
     }
 }
