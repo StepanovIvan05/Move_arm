@@ -1,11 +1,8 @@
+// src/main/java/com/example/move_arm/HelloApplication.java
 package com.example.move_arm;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
-import java.io.IOException;
 
 public class HelloApplication extends Application {
 
@@ -19,27 +16,28 @@ public class HelloApplication extends Application {
         AppLogger.info("HelloApplication: start() - запуск JavaFX приложения");
 
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/move_arm/start-window.fxml"));
-            Parent root = fxmlLoader.load();
+            // Инициализируем SceneManager
+            SceneManager.init(stage);
 
-            Scene scene = new Scene(root, 800, 600);
+            // Показываем стартовую сцену
+            SceneManager.get().showStart();
+
             stage.setTitle("Move Arm - Управление рукой");
-            stage.setScene(scene);
+            stage.setResizable(false);
 
             // Логирование событий окна
             stage.setOnShowing(event -> AppLogger.info("HelloApplication: Окно показывается"));
             stage.setOnShown(event -> AppLogger.info("HelloApplication: Окно показано"));
-            stage.setOnCloseRequest(event -> AppLogger.info("HelloApplication: Запрос на закрытие окна"));
+            stage.setOnCloseRequest(event -> {
+                AppLogger.info("HelloApplication: Запрос на закрытие окна");
+                // Можно сохранить статистику
+            });
 
             stage.show();
+            AppLogger.info("HelloApplication: Приложение запущено и стартовое окно отображено");
 
-            AppLogger.info("HelloApplication: Стартовое окно успешно отображено");
-
-        } catch (IOException e) {
-            AppLogger.error("HelloApplication: Критическая ошибка при загрузке FXML", e);
-            e.printStackTrace();
         } catch (Exception e) {
-            AppLogger.error("HelloApplication: Неожиданная ошибка при запуске", e);
+            AppLogger.error("HelloApplication: Критическая ошибка при запуске", e);
             throw e;
         }
     }
@@ -47,5 +45,9 @@ public class HelloApplication extends Application {
     @Override
     public void stop() {
         AppLogger.info("HelloApplication: stop() - приложение завершает работу");
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }
