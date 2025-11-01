@@ -23,7 +23,7 @@ public class HelloApplication extends Application {
             SceneManager.get().showStart();
 
             stage.setTitle("Move Arm - Управление рукой");
-            stage.setResizable(false);
+            stage.setResizable(true);
 
             // Логирование событий окна
             stage.setOnShowing(event -> AppLogger.info("HelloApplication: Окно показывается"));
