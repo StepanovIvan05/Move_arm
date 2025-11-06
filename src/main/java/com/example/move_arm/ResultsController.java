@@ -70,4 +70,33 @@ public class ResultsController {
             throw e;
         }
     }
+
+    @FXML
+    private void handleToMenuButton() {
+        AppLogger.info("ResultsController: Нажата кнопка 'В меню'");
+
+        try {
+            sceneManager.clearCache();
+            sceneManager.showStart();
+            AppLogger.info("ResultsController: Успешный переход в меню");
+
+        } catch (Exception e) {
+            AppLogger.error("ResultsController: Неожиданная ошибка при переходе в меню", e);
+            throw e;
+        }
+    }
+
+    @FXML
+    private void handleToMoreResultsButton() {
+        AppLogger.info("ResultsController: Нажата кнопка 'Больше статистики'");
+
+        try {
+            sceneManager.showMoreResults();
+            AppLogger.info("ResultsController: Успешный переход в более подробную статистику");
+
+        } catch (Exception e) {
+            AppLogger.error("ResultsController: Неожиданная ошибка при переходе в более подробную статистику", e);
+            throw e;
+        }
+    }
 }

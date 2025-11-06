@@ -21,6 +21,7 @@ public class SceneManager {
     public static final String START = "start";
     public static final String GAME = "game";
     public static final String RESULTS = "results";
+    public static final String MORERESULTS = "moreresults";
 
     private SceneManager(Stage stage) {
         this.primaryStage = stage;
@@ -93,6 +94,11 @@ public class SceneManager {
 
     public void showResults(){
         ResultsController ctrl = loadScene(RESULTS, "/com/example/move_arm/results-view.fxml", ResultsController.class);
+        ctrl.setSceneManager(this);
+    }
+
+    public void showMoreResults(){
+        MoreResultsController ctrl = loadScene(MORERESULTS, "/com/example/move_arm/more-results-view.fxml", MoreResultsController.class);
         ctrl.setSceneManager(this);
     }
 

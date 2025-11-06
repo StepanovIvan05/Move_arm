@@ -28,6 +28,20 @@
                 style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
                 prefWidth="150"
                 prefHeight="50"/>
+
+        <Button text="В меню"
+                fx:id="toMenu"
+                onAction="#handleToMenuButton"
+                style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
+                prefWidth="150"
+                prefHeight="50"/>
+
+        <Button text="Больше статистики"
+                fx:id="toMoreResults"
+                onAction="#handleToMoreResultsButton"
+                style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
+                prefWidth="150"
+                prefHeight="50"/>
     </VBox>
 
 </StackPane>
