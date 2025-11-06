@@ -18,10 +18,10 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
-import javafx.scene.media.AudioClip;
 
 public class GameController {
 
@@ -57,9 +57,7 @@ public class GameController {
         
         topPanel.getChildren().addAll(scoreLabel, timeLabel);
         topPanel.setSpacing(20);
-
         hoverSound = new AudioClip(getClass().getResource("/sounds/cartoon-bubble-pop-01-.mp3").toExternalForm());
-
         gameRoot.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 BooleanBinding ready = Bindings.createBooleanBinding(
