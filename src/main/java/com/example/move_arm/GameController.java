@@ -150,7 +150,7 @@ public class GameController {
 
         
         // Показываем экран результатов
-        showResults();
+        sceneManager.showResults();
     }
 
     private void showResults() {

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/11.0.1"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.example.move_arm.ResultsController"
+           fx:id="rootPane"
+           style="-fx-background-color: #1e1e1e;">
+
+    <VBox spacing="20" alignment="CENTER">
+
+        <LineChart fx:id="scoreChart" prefWidth="800" prefHeight="500">
+            <xAxis>
+                <NumberAxis label="Время (сек)"/>
+            </xAxis>
+            <yAxis>
+                <NumberAxis label="Очки"/>
+            </yAxis>
+        </LineChart>
+
+        <Button text="Рестарт"
+                fx:id="startButton"
+                onAction="#handleRestartButton"
+                style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
+                prefWidth="150"
+                prefHeight="50"/>
+    </VBox>
+
+</StackPane>

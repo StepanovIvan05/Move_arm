@@ -20,6 +20,7 @@ public class SceneManager {
     // Ключи для сцен
     public static final String START = "start";
     public static final String GAME = "game";
+    public static final String RESULTS = "results";
 
     private SceneManager(Stage stage) {
         this.primaryStage = stage;
@@ -75,13 +76,12 @@ public class SceneManager {
     }
 
     // === Публичные методы ===
-    public StartWindowController showStart() {
+    public void showStart() {
         StartWindowController ctrl = loadScene(START, "/com/example/move_arm/start-window.fxml", StartWindowController.class);
         ctrl.setSceneManager(this);
-        return ctrl;
     }
 
-    public GameController showGame() {
+    public void showGame() {
         GameController ctrl = loadScene(GAME, "/com/example/move_arm/game-view.fxml", GameController.class);
         ctrl.setSceneManager(this);
 
@@ -89,10 +89,13 @@ public class SceneManager {
         // initialize() → checkAndGenerate() → startGame()
         AppLogger.info("SceneManager: Сцена игры загружена. Ожидание готовности gameRoot...");
 
-        return ctrl;
     }
 
-    // Очистка кэша (если нужно)
+    public void showResults(){
+        ResultsController ctrl = loadScene(RESULTS, "/com/example/move_arm/results-view.fxml", ResultsController.class);
+        ctrl.setSceneManager(this);
+    }
+
     public void clearCache() {
         sceneCache.clear();
         controllers.clear();

@@ -1,15 +1,9 @@
 // src/main/java/com/example/move_arm/StartWindowController.java
 package com.example.move_arm;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
 
 public class StartWindowController {
-
-    @FXML private Button startButton;
-    @FXML private StackPane rootPane;
 
     private SceneManager sceneManager;
 
@@ -23,7 +17,7 @@ public class StartWindowController {
     }
 
     @FXML
-    private void handleStartButton(ActionEvent event) {
+    private void handleStartButton() {
         AppLogger.info("StartWindowController: Нажата кнопка 'Начать'");
 
         try {
