@@ -1,19 +1,24 @@
 package com.example.move_arm;
 
 import com.example.move_arm.model.ClickData;
+import com.example.move_arm.model.Statistics;
 import com.example.move_arm.service.GameService;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
-
-import java.awt.*;
+import javafx.scene.layout.GridPane;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ResultsController {
 
     @FXML
     private LineChart<Number, Number> scoreChart;
+
+    @FXML
+    private GridPane statsGrid;
 
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
@@ -29,74 +34,87 @@ public class ResultsController {
     }
 
     @FXML
-    private void showResults(){
+    private void showResults() {
         AppLogger.info("ResultsController: Отображение графика результатов");
 
         List<ClickData> lastGame = gameService.getLastGameClicks();
+
         if (lastGame == null || lastGame.isEmpty()) {
-            AppLogger.info("Нет данных для отображения");
+            statsGrid.add(new Label("Нет данных для отображения."), 0, 0);
             return;
         }
 
+        // === 1. Строим график ===
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         series.setName("Рост очков по времени");
 
-        long startTime = lastGame.get(0).getClickTimeNs(); // начало первой сессии
+        long startTime = lastGame.getFirst().getClickTimeNs();
         for (int i = 0; i < lastGame.size(); i++) {
             ClickData click = lastGame.get(i);
-
-            // преобразуем в секунды относительно начала
             double timeSec = (click.getClickTimeNs() - startTime) / 1_000_000_000.0;
             int score = i + 1;
-
             series.getData().add(new XYChart.Data<>(timeSec, score));
         }
 
         scoreChart.getData().clear();
         scoreChart.getData().add(series);
+
+        // === 2. Получаем статистику ===
+        double hitRate = Statistics.getHitRatePercent(lastGame);
+        String summary = Statistics.getSummary(lastGame);
+
+        // Преобразуем summary в пары ключ-значение
+        Map<String, String> metrics = parseSummary(summary);
+        metrics.put("Попадания", String.format("%.1f %%", hitRate));
+
+        // === 3. Заполняем таблицу ===
+        statsGrid.getChildren().clear();
+        int row = 0;
+        for (Map.Entry<String, String> entry : metrics.entrySet()) {
+            Label key = new Label(entry.getKey() + ":");
+            key.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-font-weight: bold;");
+
+            Label value = new Label(entry.getValue());
+            value.setStyle("-fx-text-fill: white; -fx-font-size: 16px;");
+
+            statsGrid.add(key, 0, row);
+            statsGrid.add(value, 1, row);
+            row++;
+        }
     }
 
+    private Map<String, String> parseSummary(String summary) {
+        Map<String, String> map = new LinkedHashMap<>();
+        String[] parts = summary.split("\\|");
+        for (String p : parts) {
+            String trimmed = p.trim();
+            if (trimmed.isEmpty()) continue;
+
+            int colonIndex = trimmed.indexOf(':');
+            if (colonIndex > 0) {
+                String key = trimmed.substring(0, colonIndex).trim();
+                String value = trimmed.substring(colonIndex + 1).trim();
+                map.put(key, value);
+            }
+        }
+        return map;
+    }
+
+    // Остальные методы без изменений ↓
     @FXML
     private void handleRestartButton() {
-        AppLogger.info("ResultsController: Нажата кнопка 'Рестарт'");
-
-        try {
-            sceneManager.clearCache();
-            sceneManager.showGame();
-            AppLogger.info("ResultsController: Успешный переход к игровой сцене");
-
-        } catch (Exception e) {
-            AppLogger.error("ResultsController: Неожиданная ошибка при переходе к игре", e);
-            throw e;
-        }
+        sceneManager.clearCache();
+        sceneManager.showGame();
     }
 
     @FXML
     private void handleToMenuButton() {
-        AppLogger.info("ResultsController: Нажата кнопка 'В меню'");
-
-        try {
-            sceneManager.clearCache();
-            sceneManager.showStart();
-            AppLogger.info("ResultsController: Успешный переход в меню");
-
-        } catch (Exception e) {
-            AppLogger.error("ResultsController: Неожиданная ошибка при переходе в меню", e);
-            throw e;
-        }
+        sceneManager.clearCache();
+        sceneManager.showStart();
     }
 
     @FXML
     private void handleToMoreResultsButton() {
-        AppLogger.info("ResultsController: Нажата кнопка 'Больше статистики'");
-
-        try {
-            sceneManager.showMoreResults();
-            AppLogger.info("ResultsController: Успешный переход в более подробную статистику");
-
-        } catch (Exception e) {
-            AppLogger.error("ResultsController: Неожиданная ошибка при переходе в более подробную статистику", e);
-            throw e;
-        }
+        sceneManager.showMoreResults();
     }
 }

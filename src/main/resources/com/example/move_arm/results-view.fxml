@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.chart.*?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
 <StackPane xmlns="http://javafx.com/javafx/11.0.1"
            xmlns:fx="http://javafx.com/fxml/1"
@@ -11,9 +10,9 @@
            fx:id="rootPane"
            style="-fx-background-color: #1e1e1e;">
 
-    <VBox spacing="20" alignment="CENTER">
+    <VBox spacing="25" alignment="CENTER">
 
-        <LineChart fx:id="scoreChart" prefWidth="800" prefHeight="500">
+        <LineChart fx:id="scoreChart" prefWidth="800" prefHeight="400">
             <xAxis>
                 <NumberAxis label="Время (сек)"/>
             </xAxis>
@@ -22,26 +21,34 @@
             </yAxis>
         </LineChart>
 
-        <Button text="Рестарт"
-                fx:id="startButton"
-                onAction="#handleRestartButton"
-                style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
-                prefWidth="150"
-                prefHeight="50"/>
+        <GridPane fx:id="statsGrid"
+                  hgap="20"
+                  vgap="10"
+                  style="-fx-padding: 10 30;"/>
 
-        <Button text="В меню"
-                fx:id="toMenu"
-                onAction="#handleToMenuButton"
-                style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
-                prefWidth="150"
-                prefHeight="50"/>
+        <!-- Кнопки в ряд -->
+        <HBox spacing="20" alignment="CENTER">
+            <Button text="Рестарт"
+                    fx:id="startButton"
+                    onAction="#handleRestartButton"
+                    style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
+                    prefWidth="150"
+                    prefHeight="40"/>
 
-        <Button text="Больше статистики"
-                fx:id="toMoreResults"
-                onAction="#handleToMoreResultsButton"
-                style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
-                prefWidth="150"
-                prefHeight="50"/>
+            <Button text="В меню"
+                    fx:id="toMenu"
+                    onAction="#handleToMenuButton"
+                    style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
+                    prefWidth="150"
+                    prefHeight="40"/>
+
+            <Button text="Больше статистики"
+                    fx:id="toMoreResults"
+                    onAction="#handleToMoreResultsButton"
+                    style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
+                    prefWidth="200"
+                    prefHeight="40"/>
+        </HBox>
+
     </VBox>
-
 </StackPane>
