@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Random;
 
 import com.example.move_arm.model.ClickData;
+import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
+import com.example.move_arm.service.SettingsService;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -38,6 +40,9 @@ public class GameController {
     private final int gameDuration = 30; // Настраиваемая длительность игры в секундах (можно изменить позже)
     private int activeCircles = 0;
     private static final int MAX_CIRCLES = 3;
+
+    private HoverGameSettings settings;
+
     private final Random random = new Random();
     private boolean sceneReady = false;
     private boolean gameActive = false;
@@ -51,13 +56,15 @@ public class GameController {
     public void initialize() {
         scoreLabel = new Label("Очки: 0");
         scoreLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
-        
-        timeLabel = new Label("Время: " + gameDuration);
+
+        settings = SettingsService.getInstance().getHoverSettings();
+        timeLabel = new Label("Время: " + settings.getDurationSeconds());
         timeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
         
         topPanel.getChildren().addAll(scoreLabel, timeLabel);
         topPanel.setSpacing(20);
         hoverSound = new AudioClip(getClass().getResource("/sounds/cartoon-bubble-pop-01-.mp3").toExternalForm());
+        
         gameRoot.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 BooleanBinding ready = Bindings.createBooleanBinding(
@@ -93,15 +100,17 @@ public class GameController {
         this.sceneManager = manager;
     }
 
-    private void startGame() {
+    public void startGame() {
         if (gameActive) return;
         
+        settings = SettingsService.getInstance().getHoverSettings();
+
         gameActive = true;
         score = 0;
         activeCircles = 0;
         clickData.clear();
         gameService.clear();
-        remainingTime = gameDuration;
+        remainingTime = settings.getDurationSeconds();
         scoreLabel.setText("Очки: 0");
         timeLabel.setText("Время: " + remainingTime);
         
@@ -109,7 +118,7 @@ public class GameController {
         gameRoot.getChildren().clear();
         
         // Спавним начальные круги
-        while (activeCircles < MAX_CIRCLES) {
+        while (activeCircles < settings.getMaxCirclesCount()) {
             spawnRandomTarget();
         }
         // Запускаем таймер
@@ -129,7 +138,7 @@ public class GameController {
                 endGame();
             }
         }));
-        timer.setCycleCount(gameDuration);
+        timer.setCycleCount(settings.getDurationSeconds());
         timer.play();
     }
 
@@ -195,7 +204,7 @@ public class GameController {
              return; // Выходим, чтобы избежать деления на ноль
         }
 
-        double radius = 20 + random.nextDouble() * 30;
+        double radius = settings.getRadius();
         // Генерируем координаты относительно размеров ПАНЕЛИ gameRoot
         double x = radius + random.nextDouble() * (paneWidth - 2 * radius);
         double y = radius + random.nextDouble() * (paneHeight - 2 * radius);
@@ -230,7 +239,7 @@ public class GameController {
 
             clickData.add(new ClickData(System.nanoTime(), event.getX(), event.getY(), x, y, targetRadius));
 
-            if (activeCircles < MAX_CIRCLES) {
+            if (activeCircles < settings.getMaxCirclesCount()) {
                 spawnRandomTarget();
             }
         });
@@ -238,4 +247,28 @@ public class GameController {
         gameRoot.getChildren().add(circle);
         activeCircles++;
     }
+    @FXML
+    private void handleSettings() {
+        // 1. Останавливаем текущую игру/таймер
+        if (timer != null) {
+            timer.stop();
+        }
+        gameActive = false;
+
+        // 2. Переходим на экран настроек
+        AppLogger.info("GameController: Переход в настройки");
+        sceneManager.showSettings();
+    }
+
+    @FXML
+    private void handleToMenu() {
+        if (timer != null) timer.stop();
+        gameActive = false;
+        sceneManager.showStart();
+    }
+
+    @FXML
+    private void handleRestart() {
+        startGame();
+}
 }

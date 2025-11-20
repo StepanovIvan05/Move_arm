@@ -22,6 +22,7 @@ public class SceneManager {
     public static final String GAME = "game";
     public static final String RESULTS = "results";
     public static final String MORERESULTS = "moreresults";
+    public static final String SETTINGS = "settings";
 
     private SceneManager(Stage stage) {
         this.primaryStage = stage;
@@ -106,5 +107,17 @@ public class SceneManager {
         sceneCache.clear();
         controllers.clear();
         AppLogger.info("SceneManager: Кэш сцен очищен");
+    }
+    public void showSettings() {
+        SettingsController ctrl = loadScene(SETTINGS, "/com/example/move_arm/settings-view.fxml", SettingsController.class);
+        ctrl.setSceneManager(this);
+    }
+    public void startNewGame() {
+        // 1. Загружаем (или берем из кэша) контроллер
+        GameController controller = loadScene(GAME, "/com/example/move_arm/game-view.fxml", GameController.class);
+        
+        // 2. Принудительно запускаем игру заново
+        controller.startGame();
+        AppLogger.info("SceneManager: Запущен рестарт игры с новыми настройками");
     }
 }
