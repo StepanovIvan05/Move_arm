@@ -25,9 +25,11 @@
     <bottom>
         <HBox fx:id="bottomPanel" alignment="CENTER" spacing="10" style="-fx-padding: 10; -fx-background-color: linear-gradient(to bottom, #222, #111);">
             <!-- Пример кнопок (их обработчики нужно будет реализовать отдельно или убрать) -->
-            <Button text="Новая игра" style='-fx-background-color: #222; -fx-border-color: #fff; -fx-border-radius: 5; -fx-text-fill: #fff;'/>
-            <Button text="Пауза" style='-fx-background-color: #222; -fx-border-color: #fff; -fx-border-radius: 5; -fx-text-fill: #fff;'/>
-            <Button text="Выход" style='-fx-background-color: #222; -fx-border-color: #fff; -fx-border-radius: 5; -fx-text-fill: #fff;'/>
+            <Button text="Новая игра" onAction="#handleRestart" style='-fx-background-color: #222; -fx-border-color: #fff; -fx-border-radius: 5; -fx-text-fill: #fff;'/>
+        
+            <Button text="Настройки" onAction="#handleSettings" style='-fx-background-color: #222; -fx-border-color: #fff; -fx-border-radius: 5; -fx-text-fill: #fff;'/>
+            
+            <Button text="В меню" onAction="#handleToMenu" style='-fx-background-color: #222; -fx-border-color: #fff; -fx-border-radius: 5; -fx-text-fill: #fff;'/>
         </HBox>
     </bottom>
 
