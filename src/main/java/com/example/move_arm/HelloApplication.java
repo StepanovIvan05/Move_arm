@@ -2,7 +2,10 @@
 package com.example.move_arm;
 
 import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class HelloApplication extends Application {
 
@@ -14,7 +17,7 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) {
         AppLogger.info("HelloApplication: start() - запуск JavaFX приложения");
-
+        System.out.println(getClass().getResource("/com/example/move_arm/css/dark-glow.css"));
         try {
             // Инициализируем SceneManager
             SceneManager.init(stage);
@@ -23,7 +26,14 @@ public class HelloApplication extends Application {
             SceneManager.get().showStart();
 
             stage.setTitle("Move Arm - Управление рукой");
-            stage.setResizable(true);
+            stage.setResizable(false);
+            Rectangle2D screen = Screen.getPrimary().getBounds(); // включает панель задач
+            stage.setX(0);
+            stage.setY(0);
+            stage.setWidth(screen.getWidth());
+            stage.setHeight(screen.getHeight());
+            stage.initStyle(StageStyle.UNDECORATED);
+
 
             // Логирование событий окна
             stage.setOnShowing(event -> AppLogger.info("HelloApplication: Окно показывается"));

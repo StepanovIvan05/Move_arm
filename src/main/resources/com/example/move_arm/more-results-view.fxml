@@ -1,38 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.chart.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
 <?import javafx.geometry.Insets?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
+<AnchorPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.example.move_arm.MoreResultsController"
-            prefHeight="900.0" prefWidth="1000.0"
-            style="-fx-background-color: #1e1e1e;">
+            stylesheets="@css/dark-glow.css">
 
     <VBox spacing="20" alignment="CENTER"
           AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="10"
           AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10">
 
-        <!-- ====== Таблица средних значений ====== -->
-        <Label text="Средние значения" style="-fx-text-fill: white; -fx-font-size: 20px;"/>
+        <Label text="Средние значения" styleClass="subtitle-label"/>
 
-        <GridPane fx:id="summaryTable" hgap="30" vgap="10"
-                  style="-fx-background-color: #2a2a2a; -fx-background-radius: 10;">
+        <GridPane fx:id="summaryTable"
+                  hgap="30" vgap="10"
+                  styleClass="dark-panel">
             <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
+                <Insets top="20" bottom="20" left="20" right="20"/>
             </padding>
-            <columnConstraints>
-                <ColumnConstraints percentWidth="50"/>
-                <ColumnConstraints percentWidth="50"/>
-            </columnConstraints>
         </GridPane>
 
         <Separator/>
 
-        <!-- ====== Графики ====== -->
-        <Label text="Графики" style="-fx-text-fill: white; -fx-font-size: 20px;"/>
+        <Label text="Графики" styleClass="subtitle-label"/>
 
         <ScrollPane fitToWidth="true" fitToHeight="true" prefHeight="700">
             <VBox spacing="30" alignment="CENTER">
@@ -63,10 +57,8 @@
             </VBox>
         </ScrollPane>
 
-        <Button text="В меню"
-                onAction="#handleToMenuButton"
-                style="-fx-background-color: #333; -fx-text-fill: white; -fx-font-size: 18px;
-                       -fx-padding: 10 20; -fx-background-radius: 8; -fx-border-color: #555;"
-                prefWidth="200"/>
+        <Button text="В меню" onAction="#handleToMenuButton"/>
+
     </VBox>
+
 </AnchorPane>

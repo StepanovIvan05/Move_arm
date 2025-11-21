@@ -1,54 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.chart.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
 
-<StackPane xmlns="http://javafx.com/javafx/11.0.1"
-           xmlns:fx="http://javafx.com/fxml/1"
+<StackPane xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml"
            fx:controller="com.example.move_arm.ResultsController"
-           fx:id="rootPane"
-           style="-fx-background-color: #1e1e1e;">
+           stylesheets="@css/dark-glow.css">
 
     <VBox spacing="25" alignment="CENTER">
 
         <LineChart fx:id="scoreChart" prefWidth="800" prefHeight="400">
-            <xAxis>
-                <NumberAxis label="Время (сек)"/>
-            </xAxis>
-            <yAxis>
-                <NumberAxis label="Очки"/>
-            </yAxis>
+            <xAxis><NumberAxis label="Время (сек)"/></xAxis>
+            <yAxis><NumberAxis label="Очки"/></yAxis>
         </LineChart>
 
         <GridPane fx:id="statsGrid"
-                  hgap="20"
-                  vgap="10"
-                  style="-fx-padding: 10 30;"/>
+                  hgap="20" vgap="10"/>
 
-        <!-- Кнопки в ряд -->
         <HBox spacing="20" alignment="CENTER">
-            <Button text="Рестарт"
-                    fx:id="startButton"
-                    onAction="#handleRestartButton"
-                    style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
-                    prefWidth="150"
-                    prefHeight="40"/>
 
-            <Button text="В меню"
-                    fx:id="toMenu"
-                    onAction="#handleToMenuButton"
-                    style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
-                    prefWidth="150"
-                    prefHeight="40"/>
+            <Button text="Рестарт" fx:id="startButton" onAction="#handleRestartButton"/>
+            <Button text="В меню" fx:id="toMenu" onAction="#handleToMenuButton"/>
+            <Button text="Больше статистики" fx:id="toMoreResults" onAction="#handleToMoreResultsButton"/>
 
-            <Button text="Больше статистики"
-                    fx:id="toMoreResults"
-                    onAction="#handleToMoreResultsButton"
-                    style="-fx-background-color: #222; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-border-color: #FFF; -fx-border-radius: 5;"
-                    prefWidth="200"
-                    prefHeight="40"/>
         </HBox>
 
     </VBox>
+
 </StackPane>

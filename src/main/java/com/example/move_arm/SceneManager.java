@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class SceneManager {
@@ -57,7 +59,9 @@ public class SceneManager {
             Parent root = loader.load();
 
             T controller = loader.getController();
-            Scene scene = new Scene(root, 800, 600);
+
+            Rectangle2D screen = Screen.getPrimary().getBounds();
+            Scene scene = new Scene(root, screen.getWidth(), screen.getHeight());
 
             sceneCache.put(key, scene);
             controllers.put(key, controller);

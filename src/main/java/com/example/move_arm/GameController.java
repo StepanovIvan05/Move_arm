@@ -269,6 +269,7 @@ public class GameController {
 
     @FXML
     private void handleRestart() {
+        gameActive = false;
         startGame();
 }
 }
