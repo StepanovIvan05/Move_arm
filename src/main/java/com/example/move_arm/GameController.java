@@ -242,10 +242,12 @@ public class GameController {
             if (activeCircles < settings.getMaxCirclesCount()) {
                 spawnRandomTarget();
             }
+            DestroyAnimationService.playExplosion(gameRoot, target, null);
         });
 
         gameRoot.getChildren().add(circle);
         activeCircles++;
+        
     }
     @FXML
     private void handleSettings() {
