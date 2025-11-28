@@ -1,9 +1,11 @@
 package com.example.move_arm;
 
+import com.example.move_arm.model.AnimationType;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.SettingsService;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.shape.Circle;
@@ -12,7 +14,8 @@ public class SettingsController {
 
     @FXML private Slider radiusSlider;
     @FXML private Label radiusValueLabel;
-    @FXML private Circle previewCircle; // Наш круг из FXML
+    @FXML private Circle previewCircle;
+    @FXML private ComboBox<AnimationType> animationTypeComboBox; // Добавляем ComboBox для анимаций
 
     private SceneManager sceneManager;
     private HoverGameSettings settings;
@@ -25,36 +28,38 @@ public class SettingsController {
     public void initialize() {
         settings = SettingsService.getInstance().getHoverSettings();
 
-        // Устанавливаем начальное значение слайдера
+        // === СУЩЕСТВУЮЩАЯ ЛОГИКА ДЛЯ РАДИУСА ===
         radiusSlider.setValue(settings.getMinRadius());
         updateLabel((int) settings.getMinRadius());
 
-        // === ЛОГИКА ПРЕДПРОСМОТРА ===
-
-        // 1. Связываем радиус круга со значением слайдера
-        // (Круг будет менять размер всегда, даже когда невидим)
         previewCircle.radiusProperty().bind(radiusSlider.valueProperty());
 
-        // 2. Обновляем текст цифрами
         radiusSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
             updateLabel(newVal.intValue());
         });
 
-        // 3. ПОКАЗАТЬ круг, когда начали тянуть слайдер
         radiusSlider.setOnMousePressed(event -> {
             previewCircle.setVisible(true);
         });
 
-        // 4. СКРЫТЬ круг, когда отпустили мышь
         radiusSlider.setOnMouseReleased(event -> {
             previewCircle.setVisible(false);
         });
+
+        // === НОВАЯ ЛОГИКА ДЛЯ ВЫБОРА АНИМАЦИИ ===
         
-        // Опционально: Скрывать, если курсор ушел со слайдера (на всякий случай)
-        radiusSlider.setOnMouseExited(event -> {
-            // Можно раскомментировать, если хотите, чтобы круг исчезал, если мышь соскочила,
-            // но обычно Released достаточно.
-            // previewCircle.setVisible(false); 
+        // Заполняем ComboBox всеми доступными типами анимаций
+        animationTypeComboBox.getItems().setAll(AnimationType.values());
+        
+        // Устанавливаем текущее значение из настроек
+        animationTypeComboBox.setValue(settings.getAnimationType());
+        
+        // Опционально: можно добавить подсказку при выборе
+        animationTypeComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                // Можно добавить логику для показа предпросмотра анимации
+                AppLogger.info("SettingsController: Выбрана анимация: " + newVal.getDisplayName());
+            }
         });
     }
 
@@ -64,11 +69,19 @@ public class SettingsController {
 
     @FXML
     private void handleSaveAndExit() {
+        // Сохраняем радиус (существующая логика)
         double newRadius = radiusSlider.getValue();
         settings.setRadius(newRadius);
+        
+        // Сохраняем выбранный тип анимации (новая логика)
+        AnimationType selectedAnimation = animationTypeComboBox.getValue();
+        if (selectedAnimation != null) {
+            settings.setAnimationType(selectedAnimation);
+        }
 
         SettingsService.getInstance().saveHoverSettings(settings);
-        AppLogger.info("SettingsController: Радиус сохранен: " + newRadius);
+        AppLogger.info("SettingsController: Настройки сохранены - радиус: " + newRadius + 
+                      ", анимация: " + (selectedAnimation != null ? selectedAnimation.getDisplayName() : "не выбрана"));
         
         sceneManager.startNewGame();
     }
