@@ -159,7 +159,7 @@ public class DestroyAnimationService {
     }
 
     // =========================
-    // 💥 СУМАСШЕДШИЙ ВЗРЫВ С ЭФФЕКТОМ "АХУЕТЬ"
+    // 💥 СУМАСШЕДШИЙ ВЗРЫВ 
     // =========================
     public static void playInsaneExplosion(Pane root, Circle circle, Runnable onFinish) {
         // Полная блокировка событий
