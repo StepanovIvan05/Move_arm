@@ -1,5 +1,7 @@
 package com.example.move_arm.model.settings;
 
+import com.example.move_arm.model.AnimationType;
+
 // @Entity
 // @Table(name = "hover_settings")
 public class HoverGameSettings extends BaseSettings {
@@ -10,7 +12,7 @@ public class HoverGameSettings extends BaseSettings {
     private double minRadius = 20.0;
     private double maxRadius = 50.0;
     private double radius = 35.0;
-
+    private AnimationType animationType = AnimationType.GRAVITY_FALL;
     // Пустой конструктор обязателен для ORM
     public HoverGameSettings() {}
 
@@ -29,4 +31,6 @@ public class HoverGameSettings extends BaseSettings {
 
     public double getMaxRadius() { return maxRadius; }
     public void setMaxRadius(double maxRadius) { this.maxRadius = maxRadius; }
+    public AnimationType getAnimationType() { return animationType; }
+    public void setAnimationType(AnimationType animationType) { this.animationType = animationType; }
 }

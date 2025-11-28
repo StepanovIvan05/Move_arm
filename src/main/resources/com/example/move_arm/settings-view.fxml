@@ -30,6 +30,16 @@
 
         </VBox>
 
+        <!-- НОВЫЙ БЛОК: Выбор анимации -->
+        <VBox alignment="CENTER" spacing="10"
+              styleClass="dark-panel">
+
+            <Label text="Тип анимации" styleClass="subtitle-label"/>
+
+            <ComboBox fx:id="animationTypeComboBox" prefWidth="200"/>
+
+        </VBox>
+
         <Button text="Сохранить и выйти"
                 onAction="#handleSaveAndExit"
                 styleClass="accent-button"/>

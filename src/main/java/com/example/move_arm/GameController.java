@@ -6,6 +6,7 @@ import java.util.Random;
 
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.settings.HoverGameSettings;
+import com.example.move_arm.service.AnimationService;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.SettingsService;
 
@@ -242,10 +243,12 @@ public class GameController {
             if (activeCircles < settings.getMaxCirclesCount()) {
                 spawnRandomTarget();
             }
+            AnimationService.playDestructionAnimation(gameRoot, target, null);
         });
 
         gameRoot.getChildren().add(circle);
         activeCircles++;
+        
     }
     @FXML
     private void handleSettings() {
@@ -271,5 +274,5 @@ public class GameController {
     private void handleRestart() {
         gameActive = false;
         startGame();
-}
+    }
 }
