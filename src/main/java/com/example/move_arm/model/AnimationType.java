@@ -5,9 +5,10 @@ public enum AnimationType {
     SIMPLE("Простое исчезновение"),
     EXPLOSION("Взрыв"),
     CRAZY_EXPLOSION("Безумный взрыв"),
-    GRAVITY_FALL("Падение с гравитацией"),
     AREA_GRAVITY_FALL("Рассыпание по площади"),
     COLORFUL_AREA_FALL("Цветное рассыпание"),
+    CONTOUR_COLLAPSE("Осыпание контура (Оптимально)"),   // ✅ НОВАЯ
+    FAST_SHOCKWAVE("Быстрая волна (Лайт)"),
     INSANE_EXPLOSION("Эпичный взрыв");
 
     private final String displayName;
