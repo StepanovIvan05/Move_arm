@@ -12,7 +12,7 @@ public class HoverGameSettings extends BaseSettings {
     private double minRadius = 20.0;
     private double maxRadius = 50.0;
     private double radius = 35.0;
-    private AnimationType animationType = AnimationType.GRAVITY_FALL;
+    private AnimationType animationType = AnimationType.CONTOUR_COLLAPSE;
     // Пустой конструктор обязателен для ORM
     public HoverGameSettings() {}
 

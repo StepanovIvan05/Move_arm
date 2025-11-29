@@ -608,4 +608,123 @@ public class DestroyAnimationService {
             Color.GRAY, Color.LIGHTGRAY, Color.DARKGRAY, Color.WHITESMOKE
         };
     }
+    // =========================
+    // 📉 ЭКОНОМНЫЙ ВАРИАНТ: БЕЛЫЙ КОНТУР
+    // =========================
+    public static void playContourCollapse(Pane root, Circle circle, Runnable onFinish) {
+        // Блокируем старый круг
+        circle.setMouseTransparent(true);
+        circle.setOnMouseEntered(null);
+
+        double cx = circle.getCenterX();
+        double cy = circle.getCenterY();
+        double radius = circle.getRadius();
+
+        // Удаляем исходный цветной круг
+        root.getChildren().remove(circle);
+
+        // Ограничиваем количество частиц (макс 40), чтобы не лагало
+        int particleCount = Math.min((int) (radius * 1.5), 40);
+        double angleStep = (Math.PI * 2) / particleCount;
+
+        for (int i = 0; i < particleCount; i++) {
+            double angle = (i * angleStep);
+            
+            // Координаты на границе круга
+            double px = cx + Math.cos(angle) * radius;
+            double py = cy + Math.sin(angle) * radius;
+
+            // ✅ ИЗМЕНЕНИЕ ЗДЕСЬ: Ставим Color.WHITE вместо переменной color
+            // Размер частицы: от 2 до 4 пикселей
+            Circle particle = new Circle(2 + Math.random() * 2, Color.WHITE);
+            
+            particle.setCenterX(px);
+            particle.setCenterY(py);
+            particle.setMouseTransparent(true);
+
+            root.getChildren().add(particle);
+
+            // ==========================
+            // ФИЗИКА ОСЫПАНИЯ
+            // ==========================
+            double fallDuration = 500 + Math.random() * 400;
+            
+            // Небольшой разлет в стороны
+            double horizontalShift = Math.cos(angle) * (5 + Math.random() * 15);
+            // Падение вниз
+            double verticalFall = 50 + Math.random() * 50;
+
+            TranslateTransition fall = new TranslateTransition(Duration.millis(fallDuration), particle);
+            fall.setByX(horizontalShift);
+            fall.setByY(verticalFall);
+            fall.setInterpolator(Interpolator.EASE_IN);
+
+            FadeTransition fade = new FadeTransition(Duration.millis(fallDuration), particle);
+            fade.setFromValue(1);
+            fade.setToValue(0);
+
+            // Немного уменьшаем их пока падают
+            ScaleTransition scale = new ScaleTransition(Duration.millis(fallDuration), particle);
+            scale.setToX(0.5);
+            scale.setToY(0.5);
+
+            ParallelTransition anim = new ParallelTransition(fall, fade, scale);
+            anim.setOnFinished(e -> root.getChildren().remove(particle));
+            
+            // Случайная задержка для эффекта "сыпучести"
+            anim.setDelay(Duration.millis(Math.random() * 100));
+            anim.play();
+        }
+
+        if (onFinish != null) onFinish.run();
+    }
+
+    // =========================
+    // ⚡ СУПЕР-ЛЕГКИЙ ВАРИАНТ: ИМПУЛЬС (1 НОДА)
+    // =========================
+    // Используйте это, если ПК совсем слабый. Создается всего 1 объект.
+    public static void playFastShockwave(Pane root, Circle circle, Runnable onFinish) {
+        circle.setMouseTransparent(true);
+        circle.setOnMouseEntered(null);
+
+        double cx = circle.getCenterX();
+        double cy = circle.getCenterY();
+        double radius = circle.getRadius();
+        Paint color = circle.getFill();
+
+        root.getChildren().remove(circle);
+
+        // Создаем "призрак" круга (только контур)
+        Circle shockwave = new Circle(radius);
+        shockwave.setCenterX(cx);
+        shockwave.setCenterY(cy);
+        shockwave.setFill(Color.TRANSPARENT);
+        shockwave.setStroke(color);
+        shockwave.setStrokeWidth(4);
+        shockwave.setMouseTransparent(true);
+
+        root.getChildren().add(shockwave);
+
+        // Быстрое расширение и исчезновение
+        ScaleTransition scale = new ScaleTransition(Duration.millis(300), shockwave);
+        scale.setFromX(1);
+        scale.setFromY(1);
+        scale.setToX(1.5);
+        scale.setToY(1.5);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(300), shockwave);
+        fade.setFromValue(1);
+        fade.setToValue(0);
+
+        // Можно добавить вращение для динамики
+        RotateTransition rotate = new RotateTransition(Duration.millis(300), shockwave);
+        rotate.setByAngle(45);
+
+        ParallelTransition anim = new ParallelTransition(scale, fade, rotate);
+        anim.setOnFinished(e -> {
+            root.getChildren().remove(shockwave);
+            if (onFinish != null) onFinish.run();
+        });
+        anim.play();
+    }
 }

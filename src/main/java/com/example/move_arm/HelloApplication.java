@@ -30,8 +30,8 @@ public class HelloApplication extends Application {
             Rectangle2D screen = Screen.getPrimary().getBounds(); // включает панель задач
             stage.setX(0);
             stage.setY(0);
-            stage.setWidth(screen.getWidth());
-            stage.setHeight(screen.getHeight());
+            stage.setWidth(screen.getWidth() - 200);
+            stage.setHeight(screen.getHeight() - 200);
             stage.initStyle(StageStyle.UNDECORATED);
 
 

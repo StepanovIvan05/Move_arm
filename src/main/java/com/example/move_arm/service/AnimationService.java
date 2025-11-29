@@ -4,6 +4,7 @@ package com.example.move_arm.service;
 import com.example.move_arm.DestroyAnimationService;
 import com.example.move_arm.model.AnimationType;
 import com.example.move_arm.model.settings.HoverGameSettings;
+
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 
@@ -33,9 +34,6 @@ public class AnimationService {
             case CRAZY_EXPLOSION:
                 DestroyAnimationService.playCrazyExplosion(root, circle, onFinish);
                 break;
-            case GRAVITY_FALL:
-                DestroyAnimationService.playGravityFall(root, circle, onFinish);
-                break;
             case AREA_GRAVITY_FALL:
                 DestroyAnimationService.playAreaGravityFall(root, circle, onFinish);
                 break;
@@ -44,6 +42,12 @@ public class AnimationService {
                 break;
             case INSANE_EXPLOSION:
                 DestroyAnimationService.playInsaneExplosion(root, circle, onFinish);
+                break;
+            case CONTOUR_COLLAPSE:
+                DestroyAnimationService.playContourCollapse(root, circle, onFinish);
+                break;
+            case FAST_SHOCKWAVE:
+                DestroyAnimationService.playFastShockwave(root, circle, onFinish);
                 break;
             default:
                 DestroyAnimationService.playSimple(root, circle, onFinish);
