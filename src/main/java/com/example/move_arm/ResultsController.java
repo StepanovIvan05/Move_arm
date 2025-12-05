@@ -1,120 +1,106 @@
 package com.example.move_arm;
 
+import com.example.move_arm.database.ClickDao;
 import com.example.move_arm.model.ClickData;
-import com.example.move_arm.model.Statistics;
+import com.example.move_arm.model.GameResult;
 import com.example.move_arm.service.GameService;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import java.util.LinkedHashMap;
+
 import java.util.List;
-import java.util.Map;
 
 public class ResultsController {
 
-    @FXML
-    private LineChart<Number, Number> scoreChart;
-
-    @FXML
-    private GridPane statsGrid;
+    @FXML private LineChart<Number, Number> scoreChart;
+    @FXML private GridPane statsGrid;
 
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
+    private final ClickDao clickDao = new ClickDao();
 
-    public void setSceneManager(SceneManager manager) {
-        this.sceneManager = manager;
-    }
+    public void setSceneManager(SceneManager manager) { this.sceneManager = manager; }
 
     @FXML
     public void initialize() {
-        AppLogger.info("ResultsController: Контроллер инициализирован");
+        AppLogger.info("ResultsController: инициализация");
         showResults();
     }
 
     @FXML
-    private void showResults() {
-        AppLogger.info("ResultsController: Отображение графика результатов");
+    public void showResults() {
+        statsGrid.getChildren().clear();
+        scoreChart.getData().clear();
 
-        List<ClickData> lastGame = gameService.getLastGameClicks();
-
-        if (lastGame == null || lastGame.isEmpty()) {
+        List<GameResult> results = gameService.getResultsForCurrentUser();
+        if (results == null || results.isEmpty()) {
             statsGrid.add(new Label("Нет данных для отображения."), 0, 0);
             return;
         }
 
-        // === 1. Строим график ===
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        series.setName("Рост очков по времени");
+        GameResult last = results.get(0); // последний сохранённый
+        int resultId = last.getId();
+        System.out.println(resultId);
 
-        long startTime = lastGame.getFirst().getClickTimeNs();
-        for (int i = 0; i < lastGame.size(); i++) {
-            ClickData click = lastGame.get(i);
-            double timeSec = (click.getClickTimeNs() - startTime) / 1_000_000_000.0;
+        // Получаем клики из БД для этого результата
+        List<ClickData> clicks = clickDao.readClicksForResult(resultId);
+        if (clicks == null || clicks.isEmpty()) {
+            statsGrid.add(new Label("Нет кликов для последней игры."), 0, 0);
+            return;
+        }
+
+        // === 1. Построим график очков по времени (в секундах) ===
+        XYChart.Series<Number, Number> scoreSeries = new XYChart.Series<>();
+        scoreSeries.setName("Очки во времени");
+
+        for (int i = 0; i < clicks.size(); i++) {
+            ClickData c = clicks.get(i);
+            double timeSec = c.getClickTimeNs() / 1_000_000_000.0;
             int score = i + 1;
-            series.getData().add(new XYChart.Data<>(timeSec, score));
+            scoreSeries.getData().add(new XYChart.Data<>(timeSec, score));
         }
 
-        scoreChart.getData().clear();
-        scoreChart.getData().add(series);
+        scoreChart.getData().add(scoreSeries);
+        // Убедимся, что оси подписаны
+        NumberAxis xAxis = (NumberAxis) scoreChart.getXAxis();
+        NumberAxis yAxis = (NumberAxis) scoreChart.getYAxis();
+        if (xAxis != null) xAxis.setLabel("Время (сек)");
+        if (yAxis != null) yAxis.setLabel("Очки");
 
-        // === 2. Получаем статистику ===
-        double hitRate = Statistics.getHitRatePercent(lastGame);
-        String summary = Statistics.getSummary(lastGame);
+        // === 2. Заполним таблицу статистики из GameResult (сохранённая) ===
+        statsGrid.add(new Label("Кликов:"), 0, 0);
+        statsGrid.add(new Label(String.valueOf(last.getScore())), 1, 0);
 
-        // Преобразуем summary в пары ключ-значение
-        Map<String, String> metrics = parseSummary(summary);
-        metrics.put("Попадания", String.format("%.1f %%", hitRate));
+        statsGrid.add(new Label("Длительность (ms):"), 0, 1);
+        statsGrid.add(new Label(String.valueOf(last.getDurationMs())), 1, 1);
 
-        // === 3. Заполняем таблицу ===
-        statsGrid.getChildren().clear();
-        int row = 0;
-        for (Map.Entry<String, String> entry : metrics.entrySet()) {
-            Label key = new Label(entry.getKey() + ":");
-            key.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-font-weight: bold;");
+        statsGrid.add(new Label("Ср. интервал (ms):"), 0, 2);
+        statsGrid.add(new Label(String.format("%.2f", last.getAvgIntervalMs())), 1, 2);
 
-            Label value = new Label(entry.getValue());
-            value.setStyle("-fx-text-fill: white; -fx-font-size: 16px;");
+        statsGrid.add(new Label("Ср. расстояние (px):"), 0, 3);
+        statsGrid.add(new Label(String.format("%.2f", last.getAvgDistancePx())), 1, 3);
 
-            statsGrid.add(key, 0, row);
-            statsGrid.add(value, 1, row);
-            row++;
-        }
+        statsGrid.add(new Label("Ср. скорость (px/ms):"), 0, 4);
+        statsGrid.add(new Label(String.format("%.4f", last.getAvgSpeed())), 1, 4);
+
+        statsGrid.add(new Label("Попадания (%):"), 0, 5);
+        statsGrid.add(new Label(String.format("%.2f", last.getHitRate())), 1, 5);
     }
 
-    private Map<String, String> parseSummary(String summary) {
-        Map<String, String> map = new LinkedHashMap<>();
-        String[] parts = summary.split("\\|");
-        for (String p : parts) {
-            String trimmed = p.trim();
-            if (trimmed.isEmpty()) continue;
-
-            int colonIndex = trimmed.indexOf(':');
-            if (colonIndex > 0) {
-                String key = trimmed.substring(0, colonIndex).trim();
-                String value = trimmed.substring(colonIndex + 1).trim();
-                map.put(key, value);
-            }
-        }
-        return map;
-    }
-
-    // Остальные методы без изменений ↓
-    @FXML
-    private void handleRestartButton() {
+    @FXML private void handleRestartButton() {
         sceneManager.clearCache();
         sceneManager.showGame();
     }
 
-    @FXML
-    private void handleToMenuButton() {
+    @FXML private void handleToMenuButton() {
         sceneManager.clearCache();
-        sceneManager.showStart();
+        sceneManager.showSelection();
     }
 
-    @FXML
-    private void handleToMoreResultsButton() {
+    @FXML private void handleToMoreResultsButton() {
         sceneManager.showMoreResults();
     }
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.move_arm.SelectionController"
+            stylesheets="@css/dark-glow.css">
+
+    <children>
+        <VBox spacing="16" alignment="CENTER"
+              AnchorPane.topAnchor="40" AnchorPane.leftAnchor="40"
+              AnchorPane.rightAnchor="40" AnchorPane.bottomAnchor="40">
+            <Label text="Выберите игру" styleClass="title-label" />
+
+            <HBox spacing="12" alignment="CENTER">
+                <Button fx:id="hoverButton" text="Hover (Move Arm)" prefWidth="180"/>
+                <Button fx:id="otherButton" text="Другой (пусто)" prefWidth="180" disable="true"/>
+            </HBox>
+
+            <HBox spacing="12" alignment="CENTER">
+                <Button fx:id="toSettingsButton" text="Настройки выбранной игры" />
+                <Button fx:id="backButton" text="Назад" />
+            </HBox>
+
+            <Label fx:id="infoLabel" text="" />
+        </VBox>
+    </children>
+</AnchorPane>

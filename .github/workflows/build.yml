@@ -33,7 +33,7 @@ jobs:
             --main-jar Move_arm-1.0-SNAPSHOT.jar ^
             --main-class com.example.move_arm.Launcher ^
             --name "MoveArm" ^
-            --app-version "1.1.7" ^
+            --app-version "1.1.8" ^
             --type exe ^
             --dest output ^
             --vendor "MoveArm Team" ^

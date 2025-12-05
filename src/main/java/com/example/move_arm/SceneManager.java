@@ -25,6 +25,8 @@ public class SceneManager {
     public static final String RESULTS = "results";
     public static final String MORERESULTS = "moreresults";
     public static final String SETTINGS = "settings";
+    public static final String SELECTION = "selection";
+
 
     private SceneManager(Stage stage) {
         this.primaryStage = stage;
@@ -106,6 +108,12 @@ public class SceneManager {
         MoreResultsController ctrl = loadScene(MORERESULTS, "/com/example/move_arm/more-results-view.fxml", MoreResultsController.class);
         ctrl.setSceneManager(this);
     }
+
+    public void showSelection() {
+        SelectionController ctrl = loadScene(SELECTION, "/com/example/move_arm/selection-view.fxml", SelectionController.class);
+        ctrl.setSceneManager(this);
+    }
+
 
     public void clearCache() {
         sceneCache.clear();

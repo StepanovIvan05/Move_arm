@@ -1,20 +1,20 @@
 package com.example.move_arm;
 
+import com.example.move_arm.database.ClickDao;
 import com.example.move_arm.model.ClickData;
+import com.example.move_arm.model.GameResult;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.model.Statistics;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.layout.GridPane;
 import javafx.scene.control.Label;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.GridPane;
 
 import java.util.List;
 
 public class MoreResultsController {
-    private SceneManager sceneManager;
-    private final GameService gameService = GameService.getInstance();
 
     @FXML private LineChart<Number, Number> clickIntervalsChart;
     @FXML private LineChart<Number, Number> cursorDistanceChart;
@@ -22,84 +22,120 @@ public class MoreResultsController {
     @FXML private LineChart<Number, Number> normalizedDeviationChart;
     @FXML private GridPane summaryTable;
 
-    public void setSceneManager(SceneManager manager) {
-        this.sceneManager = manager;
-    }
+    private SceneManager sceneManager;
+    private final GameService gameService = GameService.getInstance();
+    private final ClickDao clickDao = new ClickDao();
+
+    public void setSceneManager(SceneManager manager) { this.sceneManager = manager; }
 
     @FXML
-    private void initialize() {
-        AppLogger.info("MoreResultsController: Инициализация");
+    public void initialize() {
+        AppLogger.info("MoreResultsController: инициализация");
         showMoreResults();
     }
 
     @FXML
-    private void showMoreResults() {
-        AppLogger.info("MoreResultsController: Отображение графиков");
+    public void showMoreResults() {
+        summaryTable.getChildren().clear();
+        clickIntervalsChart.getData().clear();
+        cursorDistanceChart.getData().clear();
+        movementSpeedChart.getData().clear();
+        normalizedDeviationChart.getData().clear();
 
-        List<ClickData> lastGame = gameService.getLastGameClicks();
-        if (lastGame == null || lastGame.isEmpty()) {
-            AppLogger.info("Нет данных для отображения");
+        List<GameResult> results = gameService.getResultsForCurrentUser();
+        if (results == null || results.isEmpty()) {
+            summaryTable.add(new Label("Нет данных"), 0, 0);
             return;
         }
 
-        // === Получаем статистику ===
-        List<Double> clickIntervalsMs = Statistics.getClickIntervalsMs(lastGame);
-        double averageClickIntervalMs = Statistics.getAverageClickIntervalMs(lastGame);
-        List<Double> cursorDistances = Statistics.getCursorDistances(lastGame);
-        double averageCursorDistance = Statistics.getAverageCursorDistance(lastGame);
-        List<Double> movementSpeeds = Statistics.getMovementSpeeds(lastGame);
-        double averageSpeedPxPerMs = Statistics.getAverageSpeedPxPerMs(lastGame);
-        double maxSpeedPxPerMs = Statistics.getMaxSpeedPxPerMs(lastGame);
-        List<Double> normalizedDeviations = Statistics.getNormalizedDeviations(lastGame);
-        double averageNormalizedDeviation = Statistics.getAverageNormalizedDeviation(lastGame);
-        double hitRatePercent = Statistics.getHitRatePercent(lastGame);
+        GameResult last = results.get(0);
+        int resultId = last.getId();
 
-        // === Таблица средних значений ===
-        summaryTable.addRow(0, createWhiteLabel("Средний интервал кликов (мс):"), valueLabel(averageClickIntervalMs));
-        summaryTable.addRow(1, createWhiteLabel("Среднее расстояние до центра (px):"), valueLabel(averageCursorDistance));
-        summaryTable.addRow(2, createWhiteLabel("Средняя скорость (px/мс):"), valueLabel(averageSpeedPxPerMs));
-        summaryTable.addRow(3, createWhiteLabel("Макс. скорость (px/мс):"), valueLabel(maxSpeedPxPerMs));
-        summaryTable.addRow(4, createWhiteLabel("Среднее нормализ. отклонение:"), valueLabel(averageNormalizedDeviation));
-        summaryTable.addRow(5, createWhiteLabel("Процент попаданий (%):"), valueLabel(hitRatePercent));
-
-
-        // === Графики ===
-        fillChart(clickIntervalsChart, clickIntervalsMs, "Интервалы между кликами");
-        fillChart(cursorDistanceChart, cursorDistances, "Расстояние от центра");
-        fillChart(movementSpeedChart, movementSpeeds, "Скорость движения");
-        fillChart(normalizedDeviationChart, normalizedDeviations, "Нормализованное отклонение");
-    }
-
-    private Label valueLabel(double value) {
-        Label label = new Label(String.format("%.2f", value));
-        label.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-        return label;
-    }
-
-    private void fillChart(LineChart<Number, Number> chart, List<Double> data, String name) {
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        series.setName(name);
-        for (int i = 0; i < data.size(); i++) {
-            series.getData().add(new XYChart.Data<>(i + 1, data.get(i)));
+        List<ClickData> clicks = clickDao.readClicksForResult(resultId);
+        if (clicks == null || clicks.isEmpty()) {
+            summaryTable.add(new Label("Нет кликов для этого результата"), 0, 0);
+            return;
         }
-        chart.getData().setAll(series);
+
+        double currentRadius = clicks.getFirst().getRadius(); // допустим, радиус последнего клика
+        int bestScore = clickDao.getMaxClicksForUserAndRadius(last.getUserId(), currentRadius);
+
+        summaryTable.add(new Label("Рекорд для этого радиуса:"), 0, 4);
+        summaryTable.add(new Label(String.valueOf(bestScore)), 1, 4);
+
+        // Таблица средних значений (из сохранённого GameResult)
+        summaryTable.add(new Label("Средний интервал кликов (мс):"), 0, 0);
+        summaryTable.add(new Label(String.format("%.2f", last.getAvgIntervalMs())), 1, 0);
+
+        summaryTable.add(new Label("Среднее расстояние до центра (px):"), 0, 1);
+        summaryTable.add(new Label(String.format("%.2f", last.getAvgDistancePx())), 1, 1);
+
+        summaryTable.add(new Label("Средняя скорость (px/мс):"), 0, 2);
+        summaryTable.add(new Label(String.format("%.4f", last.getAvgSpeed())), 1, 2);
+
+        summaryTable.add(new Label("Процент попаданий (%):"), 0, 3);
+        summaryTable.add(new Label(String.format("%.2f", last.getHitRate())), 1, 3);
+
+        // === Построение графиков с реальными данными ===
+
+        // 1) Интервалы между кликами (ms)
+        XYChart.Series<Number, Number> intervalsSeries = new XYChart.Series<>();
+        intervalsSeries.setName("Интервал (мс)");
+        for (int i = 1; i < clicks.size(); i++) {
+            long prev = clicks.get(i-1).getClickTimeNs();
+            long curr = clicks.get(i).getClickTimeNs();
+            double intervalMs = (curr - prev) / 1_000_000.0;
+            intervalsSeries.getData().add(new XYChart.Data<>(i, intervalMs));
+        }
+        clickIntervalsChart.getData().add(intervalsSeries);
+        ((NumberAxis)clickIntervalsChart.getXAxis()).setLabel("Номер клика");
+        ((NumberAxis)clickIntervalsChart.getYAxis()).setLabel("Интервал (мс)");
+
+        // 2) Расстояние курсора от центра (px)
+        XYChart.Series<Number, Number> distSeries = new XYChart.Series<>();
+        distSeries.setName("Расстояние (px)");
+        for (int i = 0; i < clicks.size(); i++) {
+            double dist = clicks.get(i).getCursor().distance(clicks.get(i).getCenter());
+            distSeries.getData().add(new XYChart.Data<>(i+1, dist));
+        }
+        cursorDistanceChart.getData().add(distSeries);
+        ((NumberAxis)cursorDistanceChart.getXAxis()).setLabel("Номер клика");
+        ((NumberAxis)cursorDistanceChart.getYAxis()).setLabel("Расстояние (px)");
+
+        // 3) Скорость (px / ms): расстояние / интервал
+        XYChart.Series<Number, Number> speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Скорость (px/ms)");
+        for (int i = 1; i < clicks.size(); i++) {
+            double dist = clicks.get(i).getCursor().distance(clicks.get(i-1).getCursor());
+            double dtMs = (clicks.get(i).getClickTimeNs() - clicks.get(i-1).getClickTimeNs()) / 1_000_000.0;
+            double speed = dtMs > 0 ? dist / dtMs : 0.0;
+            speedSeries.getData().add(new XYChart.Data<>(i, speed));
+        }
+        movementSpeedChart.getData().add(speedSeries);
+        ((NumberAxis)movementSpeedChart.getXAxis()).setLabel("Номер клика");
+        ((NumberAxis)movementSpeedChart.getYAxis()).setLabel("Скорость (px/ms)");
+
+        // 4) Нормализованное отклонение (если у тебя radius есть)
+        XYChart.Series<Number, Number> normSeries = new XYChart.Series<>();
+        normSeries.setName("Нормализованное отклонение");
+        for (int i = 0; i < clicks.size(); i++) {
+            double deviation = clicks.get(i).getCursor().distance(clicks.get(i).getCenter());
+            double radius = clicks.get(i).getRadius();
+            double norm = radius > 0 ? deviation / radius : 0.0;
+            normSeries.getData().add(new XYChart.Data<>(i+1, norm));
+        }
+        normalizedDeviationChart.getData().add(normSeries);
+        ((NumberAxis)normalizedDeviationChart.getXAxis()).setLabel("Номер клика");
+        ((NumberAxis)normalizedDeviationChart.getYAxis()).setLabel("Нормализованное отклонение");
     }
 
     @FXML
     private void handleToMenuButton() {
-        AppLogger.info("MoreResultsController: Нажата кнопка 'В меню'");
         try {
             sceneManager.clearCache();
-            sceneManager.showStart();
+            sceneManager.showSelection();
         } catch (Exception e) {
             AppLogger.error("MoreResultsController: Ошибка при переходе в меню", e);
-            throw e;
         }
-    }
-
-    private Label createWhiteLabel(String text) {
-        Label label = new Label(text);
-        label.setTextFill(Color.WHITE); // белый текст
-        return label;
     }
 }
