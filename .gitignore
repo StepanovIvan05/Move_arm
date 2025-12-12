@@ -7,6 +7,9 @@ target/
 dependency-reduced-pom.xml
 output/
 
+src/main/resources/database/movearm.db
+structure.txt
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
