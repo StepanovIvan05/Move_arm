@@ -4,13 +4,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 
 public class DatabaseManager {
-    private static final String DB_DIR = "src/main/resources/database";
+
+    private static final String DB_DIR =
+            System.getProperty("user.home") + "/.movearm";
+
     private static final String DB_FILE = DB_DIR + "/movearm.db";
+
     private static final String URL = "jdbc:sqlite:" + DB_FILE;
 
     private static DatabaseManager instance;
@@ -29,8 +32,10 @@ public class DatabaseManager {
         try {
             Path dir = Path.of(DB_DIR);
             if (!Files.exists(dir)) Files.createDirectories(dir);
+
             Path file = Path.of(DB_FILE);
             if (!Files.exists(file)) Files.createFile(file);
+
         } catch (Exception e) {
             throw new RuntimeException("Не удалось инициализировать DB file", e);
         }
@@ -38,6 +43,7 @@ public class DatabaseManager {
 
     private void initSchema() {
         try (Connection c = getConnection(); Statement s = c.createStatement()) {
+
             s.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,7 +91,6 @@ public class DatabaseManager {
                 );
                 """);
 
-            // app metadata: ключ-значение (last_user_id и т.п.)
             s.execute("""
                 CREATE TABLE IF NOT EXISTS app_meta (
                   key TEXT PRIMARY KEY,
@@ -93,8 +98,10 @@ public class DatabaseManager {
                 );
                 """);
 
-            // ensure default game_type (hover)
-            s.execute("INSERT OR IGNORE INTO game_types(name, description) VALUES ('hover', 'Move Arm hover game');");
+            s.execute("""
+                INSERT OR IGNORE INTO game_types(name, description)
+                VALUES ('hover', 'Move Arm hover game');
+                """);
 
         } catch (Exception e) {
             throw new RuntimeException("Не удалось инициализировать схему БД", e);
@@ -105,23 +112,34 @@ public class DatabaseManager {
         return DriverManager.getConnection(URL);
     }
 
-    // app_meta helper
+    // --- Метаданные приложения ---
     public void setAppProperty(String key, String value) {
         try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement("INSERT INTO app_meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")) {
+             PreparedStatement ps = c.prepareStatement(
+                     "INSERT INTO app_meta(key, value) VALUES(?, ?) " +
+                             "ON CONFLICT(key) DO UPDATE SET value = excluded.value")) {
+
             ps.setString(1, key);
             ps.setString(2, value);
             ps.executeUpdate();
-        } catch (Exception e) { throw new RuntimeException(e); }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getAppProperty(String key) {
         try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT value FROM app_meta WHERE key = ?")) {
+             PreparedStatement ps = c.prepareStatement(
+                     "SELECT value FROM app_meta WHERE key = ?")) {
+
             ps.setString(1, key);
             var rs = ps.executeQuery();
             if (rs.next()) return rs.getString(1);
-        } catch (Exception e) { throw new RuntimeException(e); }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return null;
     }
 }
