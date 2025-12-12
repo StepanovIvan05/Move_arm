@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -125,11 +126,12 @@ public class SceneManager {
         ctrl.setSceneManager(this);
     }
     public void startNewGame() {
-        // 1. Загружаем (или берем из кэша) контроллер
         GameController controller = loadScene(GAME, "/com/example/move_arm/game-view.fxml", GameController.class);
         
-        // 2. Принудительно запускаем игру заново
-        controller.startGame();
-        AppLogger.info("SceneManager: Запущен рестарт игры с новыми настройками");
+        // Отложить запуск до следующего кадра, когда размеры будут известны
+        Platform.runLater(() -> {
+            controller.startGame();
+            AppLogger.info("SceneManager: Игра запущена после инициализации сцены");
+        });
     }
 }
