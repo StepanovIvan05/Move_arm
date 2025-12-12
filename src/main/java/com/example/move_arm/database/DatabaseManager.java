@@ -86,7 +86,7 @@ public class DatabaseManager {
                   cursor_y REAL,
                   center_x REAL,
                   center_y REAL,
-                  radius REAL,
+                  radius INTEGER,
                   FOREIGN KEY(result_id) REFERENCES game_results(id)
                 );
                 """);

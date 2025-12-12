@@ -9,35 +9,54 @@
             stylesheets="@css/dark-glow.css">
 
     <children>
+
+        <!-- Кнопка выхода из игры -->
+        <Button text="Выйти"
+                fx:id="exitButton"
+                AnchorPane.topAnchor="10"
+                AnchorPane.rightAnchor="10"
+                styleClass="danger-button"/>
+
+        <!-- Центрированная область -->
         <VBox spacing="20" alignment="CENTER"
-              AnchorPane.topAnchor="40" AnchorPane.leftAnchor="40"
-              AnchorPane.rightAnchor="40" AnchorPane.bottomAnchor="40">
+              prefWidth="600"
+              AnchorPane.topAnchor="40"
+              AnchorPane.leftAnchor="0"
+              AnchorPane.rightAnchor="0">
 
             <Label text="Move Arm" styleClass="title-label"/>
 
-            <VBox spacing="8" alignment="CENTER">
-                <Label text="Войдите или зарегистрируйтесь" styleClass="subtitle-label"/>
-                <HBox spacing="8" alignment="CENTER">
-                    <TextField fx:id="usernameField" promptText="Имя пользователя" prefWidth="240"/>
-                    <Button fx:id="loginButton" text="Войти"/>
-                    <Button fx:id="registerButton" text="Регистрация"/>
-                </HBox>
+            <!-- Карточка входа -->
+            <VBox spacing="12" alignment="CENTER"
+                  styleClass="panel-card" maxWidth="420">
+                <Label fx:id="formTitle" text="Вход" styleClass="subtitle-label"/>
+
+                <TextField fx:id="usernameField"
+                           promptText="Имя пользователя"
+                           prefWidth="260"/>
+
+                <Button fx:id="actionButton" text="Войти" styleClass="accent-button"/>
+
+                <Hyperlink fx:id="switchModeLink" text="Нет аккаунта? Регистрация"/>
             </VBox>
 
-            <HBox spacing="16" alignment="CENTER">
-                <Button fx:id="playGuestButton" text="Играть как guest" styleClass="accent-button" />
-                <Button fx:id="deleteUserButton" text="Удалить выбранного (dev)" />
-            </HBox>
+            <!-- Сообщения -->
+            <Label fx:id="messageLabel" text=""/>
 
-            <Label fx:id="messageLabel" text="" />
+            <!-- Кнопка гостя -->
+            <Button fx:id="playGuestButton"
+                    text="Играть как гость"
+                    styleClass="secondary-button"
+                    maxWidth="220"/>
 
-            <Separator prefWidth="600"/>
-
-            <VBox spacing="6" alignment="CENTER_LEFT">
-                <Label text="Пользователи (сейчас лишь guest по умолчанию)" styleClass="subtitle-label"/>
-                <ListView fx:id="usersListView" prefHeight="80" prefWidth="600"/>
+            <!-- Список пользователей -->
+            <VBox spacing="8" alignment="CENTER_LEFT" maxWidth="420">
+                <Label text="Пользователи:" styleClass="subtitle-label"/>
+                <ListView fx:id="usersListView" prefHeight="100"/>
+                <Button fx:id="deleteUserButton" text="Удалить выбранного" maxWidth="180"/>
             </VBox>
 
         </VBox>
+
     </children>
 </AnchorPane>

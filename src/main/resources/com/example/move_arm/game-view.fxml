@@ -26,7 +26,6 @@
               styleClass="bottom-bar">
 
             <Button text="Новая игра" onAction="#handleRestart"/>
-            <Button text="Настройки"  onAction="#handleSettings"/>
             <Button text="В меню"     onAction="#handleToMenu"/>
 
         </HBox>

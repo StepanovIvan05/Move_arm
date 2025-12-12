@@ -27,6 +27,8 @@ public class SceneManager {
     public static final String MORERESULTS = "moreresults";
     public static final String SETTINGS = "settings";
     public static final String SELECTION = "selection";
+    public static final String MENU = "menu";
+    public static final String STATISTICS = "statistics";
 
 
     private SceneManager(Stage stage) {
@@ -90,16 +92,6 @@ public class SceneManager {
         ctrl.setSceneManager(this);
     }
 
-    public void showGame() {
-        GameController ctrl = loadScene(GAME, "/com/example/move_arm/game-view.fxml", GameController.class);
-        ctrl.setSceneManager(this);
-
-        // НИЧЕГО НЕ ДЕЛАЕМ — игра запустится сама!
-        // initialize() → checkAndGenerate() → startGame()
-        AppLogger.info("SceneManager: Сцена игры загружена. Ожидание готовности gameRoot...");
-
-    }
-
     public void showResults(){
         ResultsController ctrl = loadScene(RESULTS, "/com/example/move_arm/results-view.fxml", ResultsController.class);
         ctrl.setSceneManager(this);
@@ -115,6 +107,15 @@ public class SceneManager {
         ctrl.setSceneManager(this);
     }
 
+    public void showMenu() {
+        MenuController ctrl = loadScene(MENU, "/com/example/move_arm/menu-view.fxml", MenuController.class);
+        ctrl.setSceneManager(this);
+    }
+
+    public void showStatistics() {
+        StatisticsController ctrl = loadScene(STATISTICS, "/com/example/move_arm/hover-statistics-view.fxml", StatisticsController.class);
+        ctrl.setSceneManager(this);
+    }
 
     public void clearCache() {
         sceneCache.clear();

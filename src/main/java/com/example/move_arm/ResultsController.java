@@ -91,13 +91,11 @@ public class ResultsController {
     }
 
     @FXML private void handleRestartButton() {
-        sceneManager.clearCache();
-        sceneManager.showGame();
+        sceneManager.startNewGame();
     }
 
     @FXML private void handleToMenuButton() {
-        sceneManager.clearCache();
-        sceneManager.showSelection();
+        sceneManager.showMenu();
     }
 
     @FXML private void handleToMoreResultsButton() {

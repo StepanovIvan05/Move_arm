@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.move_arm.StatisticsController"
+            stylesheets="@css/dark-glow.css">
+
+    <children>
+        <VBox spacing="20" alignment="CENTER"
+              AnchorPane.topAnchor="10"
+              AnchorPane.bottomAnchor="10"
+              AnchorPane.leftAnchor="10"
+              AnchorPane.rightAnchor="10">
+
+            <Label text="Статистика по выбранному радиусу" styleClass="title-label"/>
+
+            <!-- Выбор радиуса -->
+            <HBox spacing="16" alignment="CENTER">
+                <Label text="Радиус:"/>
+                <Slider fx:id="radiusSlider"
+                        min="10" max="200" value="50"
+                        blockIncrement="1"
+                        showTickLabels="true"
+                        showTickMarks="true"
+                        majorTickUnit="50"
+                        minorTickCount="5"
+                        snapToTicks="false"
+                        prefWidth="300"/>
+                <Label fx:id="radiusLabel" text="50"/>
+            </HBox>
+
+            <!-- Статистика -->
+            <GridPane fx:id="statsGrid" hgap="30" vgap="10" styleClass="dark-panel">
+                <padding>
+                    <Insets top="20" bottom="20" left="20" right="20"/>
+                </padding>
+            </GridPane>
+
+            <!-- График очков -->
+            <LineChart fx:id="scoresChart" prefWidth="600" prefHeight="300">
+                <xAxis><NumberAxis label="Игра"/></xAxis>
+                <yAxis><NumberAxis label="Очки"/></yAxis>
+            </LineChart>
+
+            <Button fx:id="backButton" text="Назад" prefWidth="140"/>
+        </VBox>
+    </children>
+</AnchorPane>

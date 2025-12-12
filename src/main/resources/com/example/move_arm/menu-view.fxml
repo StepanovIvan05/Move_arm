@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.move_arm.MenuController"
+            stylesheets="@css/dark-glow.css">
+
+    <children>
+        <VBox alignment="CENTER" spacing="20"
+              AnchorPane.topAnchor="40"
+              AnchorPane.bottomAnchor="40"
+              AnchorPane.leftAnchor="40"
+              AnchorPane.rightAnchor="40">
+
+            <Label text="Меню игры" styleClass="title-label"/>
+
+            <Button fx:id="settingsButton" text="Настройки игры" prefWidth="240"/>
+            <Button fx:id="statsButton" text="Статистика" prefWidth="240"/>
+            <Button fx:id="startButton" text="Начать игру" prefWidth="240"/>
+
+            <Separator prefWidth="300"/>
+
+            <Button fx:id="selectGameButton" text="К выбору игры" prefWidth="240"/>
+            <Button fx:id="exitButton" text="Выйти из игры" prefWidth="240"/>
+
+        </VBox>
+    </children>
+</AnchorPane>

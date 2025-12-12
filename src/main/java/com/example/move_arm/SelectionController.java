@@ -1,57 +1,42 @@
 package com.example.move_arm;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 
 /**
- * Промежуточный экран выбора игры.
- * После выбора — переходим в showGame() или showSettings() через SceneManager.
+ * Окно выбора игры (окно №2).
+ * Только выбор игры и системные действия.
  */
 public class SelectionController {
 
     @FXML private Button hoverButton;
     @FXML private Button otherButton;
-    @FXML private Button toSettingsButton;
-    @FXML private Button backButton;
-    @FXML private Label infoLabel;
+    @FXML private Button logoutButton;
+    @FXML private Button exitButton;
 
     private SceneManager sceneManager;
-    private String selectedGame = "hover"; // default
+    private String selectedGame = "hover";
 
     public void setSceneManager(SceneManager sm) {
         this.sceneManager = sm;
-        updateInfo();
     }
 
     @FXML
     public void initialize() {
+
         hoverButton.setOnAction(e -> {
             selectedGame = "hover";
-            updateInfo();
+            sceneManager.showMenu();
         });
 
         otherButton.setOnAction(e -> {
-            selectedGame = "other";
-            updateInfo();
         });
 
-        toSettingsButton.setOnAction(e -> {
-            // при выборе настроек — показываем настройки; контроллер настроек берет текущую gameType (если нужно)
-            try {
-                // при текущей архитектуре settings общие, поэтому просто открываем настройки
-                sceneManager.showSettings();
-            } catch (Exception ex) {
-                AppLogger.error("SelectionController: Не удалось открыть настройки", ex);
-            }
-        });
-
-        backButton.setOnAction(e -> {
+        logoutButton.setOnAction(e -> {
             sceneManager.showStart();
         });
-    }
 
-    private void updateInfo() {
-        infoLabel.setText("Выбрана игра: " + selectedGame);
+        exitButton.setOnAction(e -> Platform.exit());
     }
 }

@@ -45,14 +45,14 @@ public class ClickDao {
                 double cursorY = rs.getDouble("cursor_y");
                 double centerX = rs.getDouble("center_x");
                 double centerY = rs.getDouble("center_y");
-                double radius = rs.getDouble("radius");
+                int radius = rs.getInt("radius");
                 out.add(new ClickData(timeNs, cursorX, cursorY, centerX, centerY, radius));
             }
         } catch (Exception e) { throw new RuntimeException(e); }
         return out;
     }
 
-    public int getMaxClicksForUserAndRadius(int userId, double radius) {
+    public int getMaxClicksForUserAndRadius(int userId, int radius) {
         String sql = "SELECT COUNT(*) AS clicks " +
                 "FROM clicks c " +
                 "JOIN game_results g ON c.result_id = g.id " +
@@ -64,7 +64,7 @@ public class ClickDao {
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            ps.setDouble(2, radius);
+            ps.setInt(2, radius);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt("clicks");
@@ -74,4 +74,85 @@ public class ClickDao {
         }
         return 0;
     }
+
+    public List<Integer> getAvgClicksListForUserAndRadius(int userId, int radius) {
+        String sql = """
+        SELECT COUNT(*) AS clicks
+        FROM clicks c
+        JOIN game_results g ON c.result_id = g.id
+        WHERE g.user_id = ? AND c.radius = ?
+        GROUP BY c.result_id
+    """;
+
+        List<Integer> avgClicksList = new ArrayList<>();
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, radius);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                avgClicksList.add(rs.getInt("clicks"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return avgClicksList;
+    }
+
+    public List<Double> getAvgClickIntervalsForUserAndRadius(int userId, int radius) {
+        String sql = """
+        SELECT c.result_id, c.time_ns
+        FROM clicks c
+        JOIN game_results g ON c.result_id = g.id
+        WHERE g.user_id = ? AND c.radius = ?
+        ORDER BY c.result_id, c.click_index ASC
+    """;
+
+        List<Double> avgIntervalsList = new ArrayList<>();
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, radius);
+            ResultSet rs = ps.executeQuery();
+
+            int currentResultId = -1;
+            Long prevTimeNs = null;
+            List<Double> intervalsForCurrent = new ArrayList<>();
+
+            while (rs.next()) {
+                int resultId = rs.getInt("result_id");
+                long timeNs = rs.getLong("time_ns");
+
+                if (resultId != currentResultId) {
+                    // если это новая игра — сохраняем среднее предыдущей
+                    if (!intervalsForCurrent.isEmpty()) {
+                        double avg = intervalsForCurrent.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                        avgIntervalsList.add(avg);
+                    }
+                    currentResultId = resultId;
+                    prevTimeNs = null;
+                    intervalsForCurrent.clear();
+                }
+
+                if (prevTimeNs != null) {
+                    double intervalMs = (timeNs - prevTimeNs) / 1_000_000.0;
+                    intervalsForCurrent.add(intervalMs);
+                }
+                prevTimeNs = timeNs;
+            }
+
+            // сохраняем среднее последней игры
+            if (!intervalsForCurrent.isEmpty()) {
+                double avg = intervalsForCurrent.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                avgIntervalsList.add(avg);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return avgIntervalsList;
+    }
+
+
+
 }

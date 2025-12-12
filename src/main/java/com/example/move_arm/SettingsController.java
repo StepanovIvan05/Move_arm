@@ -28,6 +28,14 @@ public class SettingsController {
     public void initialize() {
         settings = SettingsService.getInstance().getHoverSettings();
 
+        // Устанавливаем диапазон и шаг слайдера
+        radiusSlider.setMin(20);
+        radiusSlider.setMax(100);
+        radiusSlider.setBlockIncrement(10);
+        radiusSlider.setMajorTickUnit(10);
+        radiusSlider.setMinorTickCount(0);
+        radiusSlider.setSnapToTicks(true);
+
         // === СУЩЕСТВУЮЩАЯ ЛОГИКА ДЛЯ РАДИУСА ===
         radiusSlider.setValue(settings.getMinRadius());
         updateLabel((int) settings.getMinRadius());
@@ -35,7 +43,9 @@ public class SettingsController {
         previewCircle.radiusProperty().bind(radiusSlider.valueProperty());
 
         radiusSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            updateLabel(newVal.intValue());
+            int rounded = ((int) Math.round(newVal.doubleValue() / 10)) * 10;
+            radiusSlider.setValue(rounded); // "прилипание" к шагам 20,30,...
+            updateLabel(rounded);
         });
 
         radiusSlider.setOnMousePressed(event -> {
@@ -70,7 +80,7 @@ public class SettingsController {
     @FXML
     private void handleSaveAndExit() {
         // Сохраняем радиус (существующая логика)
-        double newRadius = radiusSlider.getValue();
+        int newRadius = ((int) Math.round(radiusSlider.getValue() / 10)) * 10;
         settings.setRadius(newRadius);
         
         // Сохраняем выбранный тип анимации (новая логика)
@@ -83,6 +93,6 @@ public class SettingsController {
         AppLogger.info("SettingsController: Настройки сохранены - радиус: " + newRadius + 
                       ", анимация: " + (selectedAnimation != null ? selectedAnimation.getDisplayName() : "не выбрана"));
         
-        sceneManager.startNewGame();
+        sceneManager.showMenu();
     }
 }

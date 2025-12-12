@@ -17,7 +17,7 @@ public class HoverGameSettings extends BaseSettings {
     public HoverGameSettings() {}
 
     public double getRadius() {return radius;}
-    public void setRadius(double radius) {this.radius = radius;}
+    public void setRadius(int radius) {this.radius = radius;}
 
     // Геттеры и Сеттеры (ORM использует их для маппинга)
     public int getDurationSeconds() { return durationSeconds; }

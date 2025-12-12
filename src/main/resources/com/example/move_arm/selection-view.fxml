@@ -9,22 +9,22 @@
             stylesheets="@css/dark-glow.css">
 
     <children>
-        <VBox spacing="16" alignment="CENTER"
+        <VBox spacing="20" alignment="CENTER"
               AnchorPane.topAnchor="40" AnchorPane.leftAnchor="40"
               AnchorPane.rightAnchor="40" AnchorPane.bottomAnchor="40">
-            <Label text="Выберите игру" styleClass="title-label" />
+
+            <Label text="Выбор игры" styleClass="title-label"/>
 
             <HBox spacing="12" alignment="CENTER">
-                <Button fx:id="hoverButton" text="Hover (Move Arm)" prefWidth="180"/>
-                <Button fx:id="otherButton" text="Другой (пусто)" prefWidth="180" disable="true"/>
+                <Button fx:id="hoverButton" text="Hover (Move Arm)" prefWidth="200"/>
+                <Button fx:id="otherButton" text="Другая игра" prefWidth="200" disable="true"/>
             </HBox>
 
             <HBox spacing="12" alignment="CENTER">
-                <Button fx:id="toSettingsButton" text="Настройки выбранной игры" />
-                <Button fx:id="backButton" text="Назад" />
+                <Button fx:id="logoutButton" text="Выйти из аккаунта" prefWidth="180"/>
+                <Button fx:id="exitButton" text="Выйти из игры" prefWidth="160"/>
             </HBox>
 
-            <Label fx:id="infoLabel" text="" />
         </VBox>
     </children>
 </AnchorPane>

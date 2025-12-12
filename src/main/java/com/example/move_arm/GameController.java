@@ -223,7 +223,7 @@ public class GameController {
             score++;
             scoreLabel.setText("Очки: " + score);
 
-            double targetRadius = circle.getRadius() + circle.getStrokeWidth() / 2.0;
+            int targetRadius = (int) circle.getRadius();
 
             long relNs = System.nanoTime() - gameStartTimeNs;
             double cursorX = event.getX();
@@ -239,18 +239,6 @@ public class GameController {
         activeCircles++;
     }
 
-    @FXML
-    private void handleSettings() {
-        if (timer != null) timer.stop();
-        gameActive = false;
-
-        SceneManager mgr = this.sceneManager;
-        if (mgr == null) {
-            try { mgr = SceneManager.get(); } catch (Exception ignored) { mgr = null; }
-        }
-        if (mgr != null) mgr.showSettings();
-        else AppLogger.error("GameController: Невозможно открыть настройки — sceneManager == null");
-    }
 
     @FXML
     private void handleToMenu() {
@@ -261,7 +249,7 @@ public class GameController {
         if (mgr == null) {
             try { mgr = SceneManager.get(); } catch (Exception ignored) { mgr = null; }
         }
-        if (mgr != null) mgr.showStart();
+        if (mgr != null) mgr.showMenu();
         else AppLogger.error("GameController: Невозможно вернуться в меню — sceneManager == null");
     }
 

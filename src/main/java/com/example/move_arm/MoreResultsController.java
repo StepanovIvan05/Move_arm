@@ -57,7 +57,7 @@ public class MoreResultsController {
             return;
         }
 
-        double currentRadius = clicks.getFirst().getRadius(); // допустим, радиус последнего клика
+        int currentRadius = clicks.getFirst().getRadius(); // допустим, радиус последнего клика
         int bestScore = clickDao.getMaxClicksForUserAndRadius(last.getUserId(), currentRadius);
 
         summaryTable.add(new Label("Рекорд для этого радиуса:"), 0, 4);
@@ -132,8 +132,7 @@ public class MoreResultsController {
     @FXML
     private void handleToMenuButton() {
         try {
-            sceneManager.clearCache();
-            sceneManager.showSelection();
+            sceneManager.showMenu();
         } catch (Exception e) {
             AppLogger.error("MoreResultsController: Ошибка при переходе в меню", e);
         }
