@@ -135,4 +135,77 @@ public class SceneManager {
             AppLogger.info("SceneManager: Игра запущена после инициализации сцены");
         });
     }
+
+
+public void showHoldGame() {
+    String sceneKey = "holdGame";
+    
+    try {
+        // Если сцена уже в кэше - используем ее
+        if (sceneCache.containsKey(sceneKey)) {
+            primaryStage.setScene(sceneCache.get(sceneKey));
+            AppLogger.info("SceneManager: HoldGame взята из кэша");
+            
+            // Запускаем игру, если контроллер существует
+            HoldGameController controller = (HoldGameController) controllers.get(sceneKey);
+            if (controller != null) {
+                Platform.runLater(controller::startGame);
+            }
+            return;
+        }
+
+        AppLogger.info("SceneManager: Загрузка HoldGame FXML");
+        
+        // ✅ ПРОВЕРКА СУЩЕСТВОВАНИЯ РЕСУРСА
+        var resource = getClass().getResource("/com/example/move_arm/hold-game-view.fxml");
+        if (resource == null) {
+            AppLogger.error("SceneManager: FXML файл для HoldGame не найден!");
+            throw new IOException("FXML файл для HoldGame не найден по пути: /com/example/move_arm/hold-game-view.fxml");
+        }
+        
+        FXMLLoader loader = new FXMLLoader(resource);
+        Parent root = loader.load();
+        
+        HoldGameController controller = loader.getController();
+        if (controller == null) {
+            AppLogger.error("SceneManager: Не удалось получить HoldGameController из FXML");
+            throw new IllegalStateException("HoldGameController не инициализирован");
+        }
+        
+        controller.setSceneManager(this);
+
+        Rectangle2D screen = Screen.getPrimary().getBounds();
+        Scene scene = new Scene(root, screen.getWidth(), screen.getHeight());
+        
+        sceneCache.put(sceneKey, scene);
+        controllers.put(sceneKey, controller);
+
+        primaryStage.setScene(scene);
+        AppLogger.info("SceneManager: HoldGame успешно загружена");
+        
+        // Запускаем игру после полной инициализации UI
+        Platform.runLater(() -> {
+            try {
+                controller.startGame();
+                AppLogger.info("SceneManager: HoldGame успешно запущена");
+            } catch (Exception e) {
+                AppLogger.error("SceneManager: Ошибка при запуске HoldGame", e);
+            }
+        });
+        
+    } catch (Exception e) {
+        AppLogger.error("SceneManager: Критическая ошибка при загрузке HoldGame", e);
+        e.printStackTrace();
+        
+        // Возвращаемся к выбору игр при ошибке
+        Platform.runLater(() -> {
+            try {
+                showSelection();
+            } catch (Exception fallbackError) {
+                AppLogger.error("SceneManager: Не удалось вернуться к выбору игр", fallbackError);
+                Platform.exit();
+            }
+        });
+    }
+}
 }

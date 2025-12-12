@@ -78,4 +78,13 @@ public class HoldTarget extends StackPane {
     public double getRadius() {
         return radius;
     }
+    
+    // ✅ ДОБАВЛЕНЫ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ ЦЕНТРА
+    public double getCenterX() {
+        return getLayoutX() + radius;
+    }
+    
+    public double getCenterY() {
+        return getLayoutY() + radius;
+    }
 }

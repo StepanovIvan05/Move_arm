@@ -17,7 +17,7 @@
 
             <HBox spacing="12" alignment="CENTER">
                 <Button fx:id="hoverButton" text="Hover (Move Arm)" prefWidth="200"/>
-                <Button fx:id="otherButton" text="Другая игра" prefWidth="200" disable="true"/>
+                <Button fx:id="holdButton" text="Другая игра" prefWidth="200"/>
             </HBox>
 
             <HBox spacing="12" alignment="CENTER">
