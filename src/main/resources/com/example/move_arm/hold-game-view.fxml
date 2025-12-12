@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.move_arm.HoldGameController"
+            stylesheets="@css/dark-glow.css">
+
+    <top>
+        <HBox fx:id="topPanel"
+              alignment="CENTER_LEFT"
+              spacing="10"
+              styleClass="top-bar"/>
+    </top>
+
+    <center>
+        <Pane fx:id="gameRoot"/>
+    </center>
+
+    <bottom>
+        <HBox fx:id="bottomPanel"
+              alignment="CENTER"
+              spacing="10"
+              styleClass="bottom-bar">
+
+            <Button text="Новая игра" onAction="#handleRestart"/>
+            <Button text="В меню" onAction="#handleToMenu"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>

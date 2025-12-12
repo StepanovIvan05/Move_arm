@@ -11,7 +11,7 @@ import javafx.scene.control.Button;
 public class SelectionController {
 
     @FXML private Button hoverButton;
-    @FXML private Button otherButton;
+    @FXML private Button holdButton;
     @FXML private Button logoutButton;
     @FXML private Button exitButton;
 
@@ -30,7 +30,9 @@ public class SelectionController {
             sceneManager.showMenu();
         });
 
-        otherButton.setOnAction(e -> {
+        holdButton.setOnAction(e -> {
+            selectedGame = "hold";
+            sceneManager.showHoldGame(); // ✅ Запускаем новый режим
         });
 
         logoutButton.setOnAction(e -> {
