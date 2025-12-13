@@ -32,7 +32,7 @@ public class HoldGameController {
     private int score = 0;
     private int activeCircles = 0;
     private int remainingTime;
-    private final double HOLD_TIME_SECONDS = 1.0; 
+    private final double HOLD_TIME_SECONDS = 0.5; 
 
     private HoverGameSettings settings;
     private final Random random = new Random();
@@ -177,65 +177,77 @@ public class HoldGameController {
     }
 
     private void spawnHoldTarget() {
+    if (!gameActive) return;
+
+    double paneWidth = gameRoot.getWidth();
+    double paneHeight = gameRoot.getHeight();
+    if (paneWidth <= 0 || paneHeight <= 0) return;
+
+    double radius = settings.getRadius();
+
+    double x = random.nextDouble() * (paneWidth - radius * 2);
+    double y = random.nextDouble() * (paneHeight - radius * 2);
+
+    Color color = Color.rgb(
+            random.nextInt(256),
+            random.nextInt(256),
+            random.nextInt(256),
+            1.0
+    );
+
+    final HoldTarget[] ref = new HoldTarget[1];
+
+    final double centerX = x + radius;
+    final double centerY = y + radius;
+
+    Runnable onComplete = () -> {
         if (!gameActive) return;
 
-        double paneWidth = gameRoot.getWidth();
-        double paneHeight = gameRoot.getHeight();
-        if (paneWidth <= 0 || paneHeight <= 0) return;
+        if (hoverSound != null) hoverSound.play();
 
-        double radius = settings.getRadius();
-        double x = random.nextDouble() * Math.max(0, (paneWidth - 2 * radius));
-        double y = random.nextDouble() * Math.max(0, (paneHeight - 2 * radius));
-        Color color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256), 0.85);
+        score++;
+        scoreLabel.setText("Очки: " + score);
+        activeCircles--;
 
-        // ✅ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Используем массив для хранения ссылки
-        final HoldTarget[] targetRef = new HoldTarget[1];
-        
-        // ✅ Вычисляем центр заранее
-        final double centerX = x + radius;
-        final double centerY = y + radius;
+        HoldTarget target = ref[0];
+        if (target != null) {
+            gameRoot.getChildren().remove(target);
+        }
 
-        // ✅ Создаем колбэк, который использует массив вместо переменной target
-        Runnable onComplete = () -> {
-            if (!gameActive) return;
+        Circle explosionDummy = new Circle(radius);
+        explosionDummy.setCenterX(centerX);
+        explosionDummy.setCenterY(centerY);
+        explosionDummy.setFill(color);
 
-            if (hoverSound != null) hoverSound.play();
-            
-            score++;
-            scoreLabel.setText("Очки: " + score);
-            activeCircles--;
+        gameRoot.getChildren().add(explosionDummy);
 
-            // ✅ Получаем target из массива
-            HoldTarget currentTarget = targetRef[0];
-            if (currentTarget != null) {
-                gameRoot.getChildren().remove(currentTarget);
-            }
-            
-            // ✅ Создаем dummy для анимации с заранее вычисленными координатами
-            Circle explosionDummy = new Circle(radius, color);
-            explosionDummy.setCenterX(centerX);
-            explosionDummy.setCenterY(centerY);
-            gameRoot.getChildren().add(explosionDummy);
-            
-            // ✅ Запускаем анимацию (белые частицы как в оригинале)
-            DestroyAnimationService.playContourCollapse(gameRoot, explosionDummy, () -> {
-                gameRoot.getChildren().remove(explosionDummy);
-            });
+        DestroyAnimationService.playContourCollapse(
+                gameRoot,
+                explosionDummy,
+                () -> gameRoot.getChildren().remove(explosionDummy)
+        );
 
-            if (activeCircles < settings.getMaxCirclesCount()) {
-                spawnHoldTarget();
-            }
-        };
+        if (activeCircles < settings.getMaxCirclesCount()) {
+            spawnHoldTarget();
+        }
+    };
 
-        // ✅ Создаем target и сохраняем ссылку в массив
-        HoldTarget target = new HoldTarget(radius, color, HOLD_TIME_SECONDS, onComplete);
-        targetRef[0] = target; // ✅ Сохраняем ссылку здесь
+    HoldTarget target = new HoldTarget(
+            radius,
+            color,
+            HOLD_TIME_SECONDS,
+            onComplete
+    );
 
-        target.setLayoutX(x);
-        target.setLayoutY(y);
-        gameRoot.getChildren().add(target);
-        activeCircles++;
-    }
+    ref[0] = target;
+
+    target.setLayoutX(x);
+    target.setLayoutY(y);
+
+    gameRoot.getChildren().add(target);
+    activeCircles++;
+}
+
 
     @FXML
     private void handleToMenu() {
