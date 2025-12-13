@@ -4,86 +4,101 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.util.Duration;
 
-public class HoldTarget extends StackPane {
+public class HoldTarget extends Pane {
 
-    private final Circle hitbox;
-    private final Arc visualArc;
-    private final Timeline holdTimer;
-    private boolean isCompleted = false;
     private final double radius;
 
-    public HoldTarget(double radius, Color color, double holdDurationSeconds, Runnable onHoldComplete) {
+    private final Circle baseCircle;   // цветной круг (хитбокс)
+    private final Arc progressArc;     // белая дуга (индикатор)
+    private final Timeline holdTimeline;
+
+    private boolean completed = false;
+
+    public HoldTarget(
+            double radius,
+            Color circleColor,
+            double holdDurationSeconds,
+            Runnable onHoldComplete
+    ) {
         this.radius = radius;
-        
-        // Визуальная дуга (анимация по часовой стрелке)
-        visualArc = new Arc(0, 0, radius, radius, 90, -360);
-        visualArc.setType(ArcType.ROUND);
-        visualArc.setFill(color);
-        visualArc.setStroke(Color.WHITE);
-        visualArc.setStrokeWidth(2);
-        
-        // Хитбокс
-        hitbox = new Circle(radius);
-        hitbox.setFill(Color.TRANSPARENT);
-        hitbox.setStroke(Color.TRANSPARENT);
-        hitbox.setPickOnBounds(true);
 
-        getChildren().addAll(visualArc, hitbox);
+        setPrefSize(radius * 2, radius * 2);
 
-        // Таймер с плавной анимацией
-        holdTimer = new Timeline();
-        holdTimer.setCycleCount(1);
-        
-        KeyValue kv = new KeyValue(
-            visualArc.lengthProperty(), 
-            0, 
-            Interpolator.EASE_BOTH
+        // 🎯 Основной круг
+        baseCircle = new Circle(radius, radius, radius);
+        baseCircle.setFill(circleColor);
+        baseCircle.setPickOnBounds(true);
+
+        // ⚪ Дуга прогресса (изначально НЕТ)
+        progressArc = new Arc();
+        progressArc.setCenterX(radius);
+        progressArc.setCenterY(radius);
+        progressArc.setRadiusX(radius * 0.9);
+        progressArc.setRadiusY(radius * 0.9);
+        progressArc.setStartAngle(90);
+        progressArc.setLength(0); // ❗ изначально пусто
+
+        progressArc.setType(ArcType.OPEN);
+        progressArc.setFill(Color.TRANSPARENT);
+        progressArc.setStroke(Color.WHITE);
+        progressArc.setStrokeWidth(radius * 0.22);
+        progressArc.setStrokeLineCap(StrokeLineCap.ROUND);
+        progressArc.setMouseTransparent(true);
+
+        getChildren().addAll(baseCircle, progressArc);
+
+        // ⏱ Таймер удержания: 0 → -360
+        holdTimeline = new Timeline(
+                new KeyFrame(
+                        Duration.seconds(holdDurationSeconds),
+                        new KeyValue(
+                                progressArc.lengthProperty(),
+                                -360,
+                                Interpolator.EASE_BOTH
+                        )
+                )
         );
-        KeyFrame kf = new KeyFrame(Duration.seconds(holdDurationSeconds), kv);
-        holdTimer.getKeyFrames().add(kf);
+        holdTimeline.setCycleCount(1);
 
-        // Завершение удержания
-        holdTimer.setOnFinished(e -> {
-            if (!isCompleted) {
-                isCompleted = true;
-                hitbox.setMouseTransparent(true);
-                if (onHoldComplete != null) {
-                    onHoldComplete.run();
-                }
+        holdTimeline.setOnFinished(e -> {
+            if (completed) return;
+            completed = true;
+            baseCircle.setMouseTransparent(true);
+            if (onHoldComplete != null) {
+                onHoldComplete.run();
             }
         });
 
-        // Обработчики мыши
-        hitbox.setOnMouseEntered(e -> {
-            if (!isCompleted && holdTimer.getStatus() != javafx.animation.Animation.Status.RUNNING) {
-                holdTimer.playFromStart();
+        // 🖱 Наведение
+        baseCircle.setOnMouseEntered(e -> {
+            if (!completed && holdTimeline.getStatus() != Timeline.Status.RUNNING) {
+                holdTimeline.playFromStart();
             }
         });
 
-        hitbox.setOnMouseExited(e -> {
-            if (!isCompleted) {
-                holdTimer.stop();
-                visualArc.setLength(-360);
-            }
+        baseCircle.setOnMouseExited(e -> {
+            if (completed) return;
+            holdTimeline.stop();
+            progressArc.setLength(0); // ❗ снова исчезает
         });
     }
-    
+
     public double getRadius() {
         return radius;
     }
-    
-    // ✅ ДОБАВЛЕНЫ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ ЦЕНТРА
+
     public double getCenterX() {
         return getLayoutX() + radius;
     }
-    
+
     public double getCenterY() {
         return getLayoutY() + radius;
     }
