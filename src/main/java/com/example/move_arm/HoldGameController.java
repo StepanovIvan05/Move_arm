@@ -1,7 +1,11 @@
 package com.example.move_arm;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.User;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
@@ -32,12 +36,14 @@ public class HoldGameController {
     private int score = 0;
     private int activeCircles = 0;
     private int remainingTime;
+    private long gameStartTimeNs;
     private final double HOLD_TIME_SECONDS = 0.5; 
 
     private HoverGameSettings settings;
     private final Random random = new Random();
     private boolean gameActive = false;
     private Timeline timer;
+    private final List<ClickData> clickData = new ArrayList<>();
 
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
@@ -98,9 +104,11 @@ public class HoldGameController {
 
         settings = SettingsService.getInstance().getHoverSettings();
         gameActive = true;
+        clickData.clear();
         score = 0;
         activeCircles = 0;
         isInitialSpawnDone = false;
+        gameStartTimeNs = System.nanoTime();
 
         remainingTime = settings.getDurationSeconds();
         scoreLabel.setText("Очки: " + score);
@@ -162,7 +170,14 @@ public class HoldGameController {
         gameActive = false;
         if (timer != null) timer.stop();
         gameRoot.getChildren().clear();
-        
+
+        try {
+            int savedId = gameService.addGameClicks(settings.getRadius(), new ArrayList<>(clickData));
+            AppLogger.info("GameController: Результат сохранён в БД (id=" + savedId + ")");
+        } catch (Exception e) {
+            AppLogger.error("GameController: Ошибка сохранения результата", e);
+        }
+
         if (widthListener != null) {
             gameRoot.widthProperty().removeListener(widthListener);
             widthListener = null;
@@ -183,7 +198,7 @@ public class HoldGameController {
     double paneHeight = gameRoot.getHeight();
     if (paneWidth <= 0 || paneHeight <= 0) return;
 
-    double radius = settings.getRadius();
+    int radius = settings.getRadius();
 
     double x = random.nextDouble() * (paneWidth - radius * 2);
     double y = random.nextDouble() * (paneHeight - radius * 2);
@@ -203,6 +218,9 @@ public class HoldGameController {
     Runnable onComplete = () -> {
         if (!gameActive) return;
 
+        long relNs = System.nanoTime() - gameStartTimeNs;
+
+
         if (hoverSound != null) hoverSound.play();
 
         score++;
@@ -210,6 +228,17 @@ public class HoldGameController {
         activeCircles--;
 
         HoldTarget target = ref[0];
+
+        AtomicReference<Double> cursorX = new AtomicReference<>((double) 0);
+        AtomicReference<Double> cursorY = new AtomicReference<>((double) 0);
+
+        target.setOnMouseMoved(event -> {
+            cursorX.set(event.getX());
+            cursorY.set(event.getY());
+        });
+
+        clickData.add(new ClickData(relNs, cursorX.get(), cursorY.get(), x, y, radius));
+
         if (target != null) {
             gameRoot.getChildren().remove(target);
         }

@@ -25,7 +25,7 @@ public class ClickDao {
                 ps.setDouble(5, cd.getCursor().getY());
                 ps.setDouble(6, cd.getCenter().getX());
                 ps.setDouble(7, cd.getCenter().getY());
-                ps.setDouble(8, cd.getRadius());
+                ps.setInt(8, cd.getRadius());
                 ps.addBatch();
             }
             ps.executeBatch();

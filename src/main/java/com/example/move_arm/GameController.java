@@ -169,7 +169,7 @@ public class GameController {
 
         // сохраняем результат — GameService сохраняет в БД и хранит lastGameClicks
         try {
-            int savedId = gameService.addGameClicks(new ArrayList<>(clickData));
+            int savedId = gameService.addGameClicks(settings.getRadius(), new ArrayList<>(clickData));
             AppLogger.info("GameController: Результат сохранён в БД (id=" + savedId + ")");
         } catch (Exception e) {
             AppLogger.error("GameController: Ошибка сохранения результата", e);
@@ -201,7 +201,7 @@ public class GameController {
             return;
         }
 
-        double radius = settings.getRadius();
+        int radius = settings.getRadius();
         double x = radius + random.nextDouble() * Math.max(0, (paneWidth - 2 * radius));
         double y = radius + random.nextDouble() * Math.max(0, (paneHeight - 2 * radius));
 

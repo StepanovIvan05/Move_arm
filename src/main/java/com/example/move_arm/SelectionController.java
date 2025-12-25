@@ -1,5 +1,7 @@
 package com.example.move_arm;
 
+import com.example.move_arm.database.GameTypeDao;
+import com.example.move_arm.service.GameService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -16,7 +18,8 @@ public class SelectionController {
     @FXML private Button exitButton;
 
     private SceneManager sceneManager;
-    private String selectedGame = "hover";
+    private final GameTypeDao gameTypeDao = new GameTypeDao();
+    private final GameService gameService = GameService.getInstance();
 
     public void setSceneManager(SceneManager sm) {
         this.sceneManager = sm;
@@ -26,13 +29,13 @@ public class SelectionController {
     public void initialize() {
 
         hoverButton.setOnAction(e -> {
-            selectedGame = "hover";
+            gameService.setCurrentGameType(gameTypeDao.findByName("hover").get());
             sceneManager.showMenu();
         });
 
         holdButton.setOnAction(e -> {
-            selectedGame = "hold";
-            sceneManager.showHoldGame(); // ✅ Запускаем новый режим
+            gameService.setCurrentGameType(gameTypeDao.findByName("hold").get());
+            sceneManager.showMenu();
         });
 
         logoutButton.setOnAction(e -> {

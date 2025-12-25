@@ -16,8 +16,8 @@
             <Label text="Выбор игры" styleClass="title-label"/>
 
             <HBox spacing="12" alignment="CENTER">
-                <Button fx:id="hoverButton" text="Hover (Move Arm)" prefWidth="200"/>
-                <Button fx:id="holdButton" text="Другая игра" prefWidth="200"/>
+                <Button fx:id="hoverButton" text="Hover" prefWidth="200"/>
+                <Button fx:id="holdButton" text="Hold" prefWidth="200"/>
             </HBox>
 
             <HBox spacing="12" alignment="CENTER">

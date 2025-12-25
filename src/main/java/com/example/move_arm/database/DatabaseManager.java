@@ -64,6 +64,7 @@ public class DatabaseManager {
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   user_id INTEGER,
                   game_type_id INTEGER,
+                  radius INTEGER,
                   score INTEGER,
                   duration_ms INTEGER,
                   timestamp INTEGER,
@@ -101,6 +102,11 @@ public class DatabaseManager {
             s.execute("""
                 INSERT OR IGNORE INTO game_types(name, description)
                 VALUES ('hover', 'Move Arm hover game');
+                """);
+
+            s.execute("""
+                INSERT OR IGNORE INTO game_types(name, description)
+                VALUES ('hold', 'Move Arm hold game');
                 """);
 
         } catch (Exception e) {

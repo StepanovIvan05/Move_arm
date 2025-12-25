@@ -12,20 +12,21 @@ public class GameResultDao {
 
     public int insert(GameResult r) {
         String sql = """
-            INSERT INTO game_results(user_id, game_type_id, score, duration_ms, timestamp, hit_rate, avg_interval_ms, avg_distance_px, avg_speed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO game_results(user_id, game_type_id, radius, score, duration_ms, timestamp, hit_rate, avg_interval_ms, avg_distance_px, avg_speed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, r.getUserId());
             ps.setInt(2, r.getGameTypeId());
-            ps.setInt(3, r.getScore());
-            ps.setLong(4, r.getDurationMs());
-            ps.setLong(5, r.getTimestamp());
-            ps.setDouble(6, r.getHitRate());
-            ps.setDouble(7, r.getAvgIntervalMs());
-            ps.setDouble(8, r.getAvgDistancePx());
-            ps.setDouble(9, r.getAvgSpeed());
+            ps.setInt(3, r.getRadius());
+            ps.setInt(4, r.getScore());
+            ps.setLong(5, r.getDurationMs());
+            ps.setLong(6, r.getTimestamp());
+            ps.setDouble(7, r.getHitRate());
+            ps.setDouble(9, r.getAvgIntervalMs());
+            ps.setDouble(9, r.getAvgDistancePx());
+            ps.setDouble(10, r.getAvgSpeed());
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) {
@@ -84,12 +85,26 @@ public class GameResultDao {
         } catch (Exception e) { throw new RuntimeException(e); }
     }
 
+    public List<Integer> findListScoreByUserGameTypeAndRadius(int userId, int gameTypeId, int radius){
+        List<Integer> out = new ArrayList<>();
+        String sql = "SELECT score FROM game_results WHERE user_id = ? AND game_type_id = ? AND radius = ?";
+        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, gameTypeId);
+            ps.setInt(3, radius);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) out.add(rs.getInt("score"));
+        } catch (Exception e) { throw new RuntimeException(e); }
+        return out;
+    }
+
 
     private GameResult mapRow(ResultSet rs) throws SQLException {
         GameResult r = new GameResult();
         r.setId(rs.getInt("id"));
         r.setUserId(rs.getInt("user_id"));
         r.setGameTypeId(rs.getInt("game_type_id"));
+        r.setRadius(rs.getInt("radius"));
         r.setScore(rs.getInt("score"));
         r.setDurationMs(rs.getLong("duration_ms"));
         r.setTimestamp(rs.getLong("timestamp"));

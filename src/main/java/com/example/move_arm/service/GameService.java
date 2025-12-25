@@ -5,10 +5,7 @@ import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.database.GameTypeDao;
 import com.example.move_arm.database.UserDao;
 import com.example.move_arm.database.DatabaseManager;
-import com.example.move_arm.model.ClickData;
-import com.example.move_arm.model.GameResult;
-import com.example.move_arm.model.User;
-import com.example.move_arm.model.Statistics;
+import com.example.move_arm.model.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +32,7 @@ public class GameService {
     private final DatabaseManager dbManager = DatabaseManager.getInstance();
 
     private User currentUser;
+    private GameType currentGameType;
     private List<ClickData> lastGameClicks = new ArrayList<>();
 
     private GameService() {
@@ -85,6 +83,24 @@ public class GameService {
         }
     }
 
+    public int getCurrentGameTypeId() {
+        return currentGameType.getId();
+    }
+
+    public String getCurrentGameTypeString(){
+        return currentGameType.getName();
+    }
+
+    public void setCurrentGameType(GameType gameType) {
+        if (gameType == null) return;
+        this.currentGameType = gameType;
+        try {
+            dbManager.setAppProperty("last_game_type_id", String.valueOf(gameType.getId()));
+        } catch (Exception e) {
+            // логирование не обязателен здесь, но можно оставить
+            System.err.println("GameService: Не удалось сохранить last_game_type_id: " + e.getMessage());
+        }
+    }
     // --- Game results / clicks ------------------------------------------
 
     /**
@@ -93,7 +109,7 @@ public class GameService {
      *
      * Метод ожидает, что ClickData.getClickTimeNs() уже содержит относительные времена (ns от старта игры).
      */
-    public int addGameClicks(List<ClickData> clicks) {
+    public int addGameClicks(int radius, List<ClickData> clicks) {
         if (clicks == null) clicks = Collections.emptyList();
 
         // Копируем в память
@@ -104,9 +120,9 @@ public class GameService {
         result.setUserId(currentUser != null ? currentUser.getId() : 0);
 
         // Гарантируем наличие game_type (например "hover")
-        int gameTypeId = gameTypeDao.getIdOrCreate("hover", "Move Arm hover game");
+        int gameTypeId = getCurrentGameTypeId();
         result.setGameTypeId(gameTypeId);
-
+        result.setRadius(radius);
         result.setScore(clicks.size());
 
         long durationMs = 0L;
@@ -178,5 +194,9 @@ public class GameService {
      */
     public List<GameResult> getAllResults() {
         return gameResultDao.findAll(); // предполагается реализация findAll() в GameResultDao или добавить её
+    }
+
+    public GameType getGameType(){
+        return currentGameType;
     }
 }

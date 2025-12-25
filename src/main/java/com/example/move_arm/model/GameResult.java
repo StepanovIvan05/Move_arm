@@ -6,6 +6,7 @@ public class GameResult {
     private int id;
     private int userId;
     private int gameTypeId;
+    private int radius;
     private int score;
     private long durationMs;
     private long timestamp; // epoch ms
@@ -25,6 +26,9 @@ public class GameResult {
 
     public int getGameTypeId() { return gameTypeId; }
     public void setGameTypeId(int gameTypeId) { this.gameTypeId = gameTypeId; }
+
+    public int getRadius() { return radius; }
+    public void setRadius(int radius) { this.radius = radius; }
 
     public int getScore() { return score; }
     public void setScore(int score) { this.score = score; }

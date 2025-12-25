@@ -1,7 +1,9 @@
 package com.example.move_arm;
 
 import com.example.move_arm.database.ClickDao;
+import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.model.GameResult;
+import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
@@ -25,7 +27,9 @@ public class StatisticsController {
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
     private final ClickDao clickDao = new ClickDao();
+    private final GameResultDao gameResultDao = new GameResultDao();
     private int radius = 50;
+    private HoverGameSettings settings;
 
     public void setSceneManager(SceneManager sm) {
         this.sceneManager = sm;
@@ -70,10 +74,10 @@ public class StatisticsController {
         }
 
         // вычисляем рекорд, среднее очков, среднее время между кликами
-        List<Integer> AvgClicsList = clickDao.getAvgClicksListForUserAndRadius(gameService.getCurrentUser().getId(), radius);
+        List<Integer> ScoresList = gameResultDao.findListScoreByUserGameTypeAndRadius(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius);
         List<Double> intervals = clickDao.getAvgClickIntervalsForUserAndRadius(gameService.getCurrentUser().getId(), radius);
         double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        double avgScore = AvgClicsList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
+        double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
         int bestScore = clickDao.getMaxClicksForUserAndRadius(gameService.getCurrentUser().getId(), radius);
 
         statsGrid.add(new Label("Рекорд:"), 0, 0);
@@ -94,7 +98,7 @@ public class StatisticsController {
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         series.setName("Очки по играм");
         int i = 1;
-        for (int r : AvgClicsList) {
+        for (int r : ScoresList) {
             series.getData().add(new XYChart.Data<>(i++, r));
         }
         scoresChart.getData().add(series);

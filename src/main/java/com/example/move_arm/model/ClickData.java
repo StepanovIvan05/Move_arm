@@ -25,7 +25,7 @@ public class ClickData {
 
     @Override
     public String toString() {
-        return String.format("t=%.3fs | Курсор: %s | Центр: %s | R=%s",
+        return String.format("t=%.3fs | Курсор: %s | Центр: %s | R=%d",
             clickTimeNs / 1_000_000_000.0, cursor, center, radius);
     }
 }

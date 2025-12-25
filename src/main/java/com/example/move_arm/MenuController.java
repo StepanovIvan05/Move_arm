@@ -1,8 +1,11 @@
 package com.example.move_arm;
 
+import com.example.move_arm.service.GameService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+
+import java.util.Objects;
 
 /**
  * Контроллер окна №3 — меню выбранной игры.
@@ -16,6 +19,8 @@ public class MenuController {
     @FXML private Button exitButton;
 
     private SceneManager sceneManager;
+    private GameService gameService = GameService.getInstance();
+    private String gameType;
 
     public void setSceneManager(SceneManager sm) {
         this.sceneManager = sm;
@@ -36,7 +41,13 @@ public class MenuController {
 
         // Начало игры
         startButton.setOnAction(e -> {
-            sceneManager.startNewGame();
+            gameType = gameService.getCurrentGameTypeString();
+            if(Objects.equals(gameType, "hover")){
+                sceneManager.startNewGame();
+            }
+            else if(Objects.equals(gameType, "hold")){
+                sceneManager.showHoldGame();
+            }
         });
 
         // Вернуться к выбору игры
