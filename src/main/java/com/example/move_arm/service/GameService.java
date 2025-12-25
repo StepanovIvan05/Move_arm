@@ -138,7 +138,7 @@ public class GameService {
         result.setAvgIntervalMs(Statistics.getAverageClickIntervalMs(clicks));
         result.setAvgDistancePx(Statistics.getAverageCursorDistance(clicks));
         result.setAvgSpeed(Statistics.getAverageSpeedPxPerMs(clicks));
-
+        System.out.println(Statistics.getAverageClickIntervalMs(clicks));
         // Сохраняем результат и клики в БД
         int resultId = gameResultDao.insert(result);
         if (!clicks.isEmpty()) {

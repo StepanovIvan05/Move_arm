@@ -1,9 +1,7 @@
 package com.example.move_arm;
 
-import com.example.move_arm.database.ClickDao;
 import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.model.GameResult;
-import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
@@ -26,10 +24,8 @@ public class StatisticsController {
 
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
-    private final ClickDao clickDao = new ClickDao();
     private final GameResultDao gameResultDao = new GameResultDao();
     private int radius = 50;
-    private HoverGameSettings settings;
 
     public void setSceneManager(SceneManager sm) {
         this.sceneManager = sm;
@@ -37,7 +33,7 @@ public class StatisticsController {
 
     @FXML
     public void initialize() {
-        radiusLabel.setText(String.valueOf((int) radius));
+        radiusLabel.setText(String.valueOf(radius));
 
         radiusSlider.setMin(20);
         radiusSlider.setMax(100);
@@ -75,10 +71,10 @@ public class StatisticsController {
 
         // вычисляем рекорд, среднее очков, среднее время между кликами
         List<Integer> ScoresList = gameResultDao.findListScoreByUserGameTypeAndRadius(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius);
-        List<Double> intervals = clickDao.getAvgClickIntervalsForUserAndRadius(gameService.getCurrentUser().getId(), radius);
+        List<Double> intervals = gameResultDao.findListAvgTimesByUserGameTypeAndRadius(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius);
         double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
         double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
-        int bestScore = clickDao.getMaxClicksForUserAndRadius(gameService.getCurrentUser().getId(), radius);
+        int bestScore = gameResultDao.findRecordScoreByUserGameTypeAndRadius(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius);
 
         statsGrid.add(new Label("Рекорд:"), 0, 0);
         statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
