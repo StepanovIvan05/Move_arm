@@ -1,62 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/17"
+<BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.example.move_arm.StartWindowController"
             stylesheets="@css/dark-glow.css">
 
-    <children>
+    <!-- ================= TOP BAR ================= -->
+    <top>
+        <HBox alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
 
-        <!-- Кнопка выхода из игры -->
-        <Button text="Выйти"
-                fx:id="exitButton"
-                AnchorPane.topAnchor="10"
-                AnchorPane.rightAnchor="10"
-                styleClass="danger-button"/>
+            <Button fx:id="exitButton"
+                    text="Выйти"
+                    styleClass="flat-danger-button"/>
+        </HBox>
+    </top>
 
-        <!-- Центрированная область -->
-        <VBox spacing="20" alignment="CENTER"
-              prefWidth="600"
-              AnchorPane.topAnchor="40"
-              AnchorPane.leftAnchor="0"
-              AnchorPane.rightAnchor="0">
+    <!-- ================= CENTER ================= -->
+    <center>
+        <VBox alignment="CENTER" spacing="28">
 
-            <Label text="Move Arm" styleClass="title-label"/>
+            <!-- Title -->
+            <VBox alignment="CENTER" spacing="6">
+                <Label text="Move Arm" styleClass="title-label"/>
+                <Label text="Реабилитационная игра"
+                       styleClass="caption-label"/>
+            </VBox>
 
-            <!-- Карточка входа -->
-            <VBox spacing="12" alignment="CENTER"
-                  styleClass="panel-card" maxWidth="420">
-                <Label fx:id="formTitle" text="Вход" styleClass="subtitle-label"/>
+            <!-- Login / Register Card -->
+            <VBox spacing="14"
+                  alignment="CENTER"
+                  maxWidth="360"
+                  styleClass="panel-card">
+
+                <Label fx:id="formTitle"
+                       text="Вход"
+                       styleClass="subtitle-label"/>
 
                 <TextField fx:id="usernameField"
                            promptText="Имя пользователя"
-                           prefWidth="260"/>
+                           maxWidth="260"/>
 
-                <Button fx:id="actionButton" text="Войти" styleClass="accent-button"/>
+                <Button fx:id="actionButton"
+                        text="Войти"
+                        maxWidth="260"
+                        styleClass="accent-button"/>
 
-                <Hyperlink fx:id="switchModeLink" text="Нет аккаунта? Регистрация"/>
+                <Hyperlink fx:id="switchModeLink"
+                           text="Нет аккаунта? Регистрация"/>
             </VBox>
 
-            <!-- Сообщения -->
-            <Label fx:id="messageLabel" text=""/>
+            <!-- Message -->
+            <Label fx:id="messageLabel"
+                   styleClass="message-label"/>
 
-            <!-- Кнопка гостя -->
+            <!-- Guest -->
             <Button fx:id="playGuestButton"
                     text="Играть как гость"
-                    styleClass="secondary-button"
+                    styleClass="ghost-button"
                     maxWidth="220"/>
 
-            <!-- Список пользователей -->
-            <VBox spacing="8" alignment="CENTER_LEFT" maxWidth="420">
-                <Label text="Пользователи:" styleClass="subtitle-label"/>
-                <ListView fx:id="usersListView" prefHeight="100"/>
-                <Button fx:id="deleteUserButton" text="Удалить выбранного" maxWidth="180"/>
-            </VBox>
+            <!-- Users list (secondary) -->
+            <TitledPane text="Другие пользователи"
+                        expanded="false"
+                        maxWidth="360">
+                <VBox spacing="8">
+                    <padding>
+                        <Insets top="8" right="8" bottom="8" left="8"/>
+                    </padding>
+
+                    <ListView fx:id="usersListView" prefHeight="100"/>
+
+                    <Button fx:id="deleteUserButton"
+                            text="Удалить выбранного"
+                            styleClass="danger-outline-button"
+                            maxWidth="200"/>
+                </VBox>
+            </TitledPane>
 
         </VBox>
+    </center>
 
-    </children>
-</AnchorPane>
+</BorderPane>

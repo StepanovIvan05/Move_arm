@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
@@ -9,22 +10,83 @@
             stylesheets="@css/dark-glow.css">
 
     <children>
-        <VBox spacing="20" alignment="CENTER"
-              AnchorPane.topAnchor="40" AnchorPane.leftAnchor="40"
-              AnchorPane.rightAnchor="40" AnchorPane.bottomAnchor="40">
 
-            <Label text="Выбор игры" styleClass="title-label"/>
+        <VBox alignment="CENTER"
+              spacing="32"
+              AnchorPane.topAnchor="40"
+              AnchorPane.bottomAnchor="40"
+              AnchorPane.leftAnchor="40"
+              AnchorPane.rightAnchor="40">
 
-            <HBox spacing="12" alignment="CENTER">
-                <Button fx:id="hoverButton" text="Hover" prefWidth="200"/>
-                <Button fx:id="holdButton" text="Hold" prefWidth="200"/>
+            <!-- Заголовок -->
+            <Label text="Выберите режим игры"
+                   styleClass="title-label"/>
+
+            <!-- Карточки выбора игры -->
+            <HBox spacing="28"
+                  alignment="CENTER">
+
+                <!-- Hover -->
+                <VBox spacing="12"
+                      alignment="CENTER"
+                      prefWidth="260"
+                      styleClass="panel-card">
+
+                    <Label text="Hover"
+                           styleClass="subtitle-label"/>
+
+                    <Label text="Наведение курсора на появляющиеся цели"
+                           wrapText="true"
+                           maxWidth="220"
+                           styleClass="caption-label"/>
+
+                    <Button fx:id="hoverButton"
+                            text="Начать"
+                            prefWidth="140"
+                            styleClass="accent-button"/>
+                </VBox>
+
+                <!-- Hold -->
+                <VBox spacing="12"
+                      alignment="CENTER"
+                      prefWidth="260"
+                      styleClass="panel-card">
+
+                    <Label text="Hold"
+                           styleClass="subtitle-label"/>
+
+                    <Label text="Удерживайте курсор на цели заданное время"
+                           wrapText="true"
+                           maxWidth="220"
+                           styleClass="caption-label"/>
+
+                    <Button fx:id="holdButton"
+                            text="Начать"
+                            prefWidth="140"
+                            styleClass="accent-button"/>
+                </VBox>
+
             </HBox>
 
-            <HBox spacing="12" alignment="CENTER">
-                <Button fx:id="logoutButton" text="Выйти из аккаунта" prefWidth="180"/>
-                <Button fx:id="exitButton" text="Выйти из игры" prefWidth="160"/>
+            <!-- Разделитель -->
+            <Region prefHeight="20"/>
+
+            <!-- Служебные действия -->
+            <HBox spacing="16"
+                  alignment="CENTER">
+
+                <Button fx:id="logoutButton"
+                        text="Сменить пользователя"
+                        styleClass="secondary-button"
+                        prefWidth="200"/>
+
+                <Button fx:id="exitButton"
+                        text="Выйти из игры"
+                        styleClass="danger-button"
+                        prefWidth="160"/>
             </HBox>
 
         </VBox>
+
     </children>
 </AnchorPane>
