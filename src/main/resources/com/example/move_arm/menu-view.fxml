@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
@@ -8,23 +9,56 @@
             stylesheets="@css/dark-glow.css">
 
     <children>
-        <VBox alignment="CENTER" spacing="20"
+
+        <VBox alignment="CENTER"
+              spacing="36"
               AnchorPane.topAnchor="40"
               AnchorPane.bottomAnchor="40"
               AnchorPane.leftAnchor="40"
               AnchorPane.rightAnchor="40">
 
-            <Label text="Меню игры" styleClass="title-label"/>
+            <!-- Заголовок -->
+            <Label text="Меню игры"
+                   styleClass="title-label"/>
 
-            <Button fx:id="settingsButton" text="Настройки игры" prefWidth="240"/>
-            <Button fx:id="statsButton" text="Статистика" prefWidth="240"/>
-            <Button fx:id="startButton" text="Начать игру" prefWidth="240"/>
+            <!-- Основные действия -->
+            <VBox spacing="16"
+                  alignment="CENTER"
+                  styleClass="panel-card"
+                  maxWidth="320">
 
-            <Separator prefWidth="300"/>
+                <Button fx:id="startButton"
+                        text="Начать игру"
+                        prefWidth="260"
+                        styleClass="accent-button"/>
 
-            <Button fx:id="selectGameButton" text="К выбору игры" prefWidth="240"/>
-            <Button fx:id="exitButton" text="Выйти из игры" prefWidth="240"/>
+                <Button fx:id="settingsButton"
+                        text="Настройки игры"
+                        prefWidth="260"/>
+
+                <Button fx:id="statsButton"
+                        text="Статистика"
+                        prefWidth="260"/>
+
+            </VBox>
+
+            <!-- Вторичные действия -->
+            <VBox spacing="12"
+                  alignment="CENTER">
+
+                <Button fx:id="selectGameButton"
+                        text="К выбору игры"
+                        prefWidth="220"
+                        styleClass="secondary-button"/>
+
+                <Button fx:id="exitButton"
+                        text="Выйти из игры"
+                        prefWidth="220"
+                        styleClass="danger-button"/>
+
+            </VBox>
 
         </VBox>
+
     </children>
 </AnchorPane>

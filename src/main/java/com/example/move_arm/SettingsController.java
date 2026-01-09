@@ -2,20 +2,26 @@ package com.example.move_arm;
 
 import com.example.move_arm.model.AnimationType;
 import com.example.move_arm.model.settings.HoverGameSettings;
+import com.example.move_arm.service.AnimationService;
 import com.example.move_arm.service.SettingsService;
 
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 public class SettingsController {
 
     @FXML private Slider radiusSlider;
     @FXML private Label radiusValueLabel;
+    @FXML private ComboBox<AnimationType> animationTypeComboBox;
+
+    @FXML private Pane previewRoot;
     @FXML private Circle previewCircle;
-    @FXML private ComboBox<AnimationType> animationTypeComboBox; // Добавляем ComboBox для анимаций
 
     private SceneManager sceneManager;
     private HoverGameSettings settings;
@@ -28,71 +34,109 @@ public class SettingsController {
     public void initialize() {
         settings = SettingsService.getInstance().getHoverSettings();
 
-        // Устанавливаем диапазон и шаг слайдера
+        // =========================
+        // 🔘 РАДИУС (ТОЛЬКО ДИСКРЕТНЫЙ)
+        // =========================
         radiusSlider.setMin(20);
         radiusSlider.setMax(100);
-        radiusSlider.setBlockIncrement(10);
         radiusSlider.setMajorTickUnit(10);
         radiusSlider.setMinorTickCount(0);
         radiusSlider.setSnapToTicks(true);
 
-        // === СУЩЕСТВУЮЩАЯ ЛОГИКА ДЛЯ РАДИУСА ===
-        radiusSlider.setValue(settings.getMinRadius());
-        updateLabel((int) settings.getMinRadius());
-
-        previewCircle.radiusProperty().bind(radiusSlider.valueProperty());
+        radiusSlider.setValue(settings.getRadius());
+        previewCircle.setRadius(settings.getRadius());
+        updateRadiusLabel(settings.getRadius());
 
         radiusSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            int rounded = ((int) Math.round(newVal.doubleValue() / 10)) * 10;
-            radiusSlider.setValue(rounded); // "прилипание" к шагам 20,30,...
-            updateLabel(rounded);
+            int snapped = ((int) Math.round(newVal.doubleValue() / 10)) * 10;
+            radiusSlider.setValue(snapped);
+            previewCircle.setRadius(snapped);
+            updateRadiusLabel(snapped);
+            centerCircle();
         });
 
-        radiusSlider.setOnMousePressed(event -> {
-            previewCircle.setVisible(true);
-        });
-
-        radiusSlider.setOnMouseReleased(event -> {
-            previewCircle.setVisible(false);
-        });
-
-        // === НОВАЯ ЛОГИКА ДЛЯ ВЫБОРА АНИМАЦИИ ===
-        
-        // Заполняем ComboBox всеми доступными типами анимаций
+        // =========================
+        // 🎬 АНИМАЦИИ
+        // =========================
         animationTypeComboBox.getItems().setAll(AnimationType.values());
-        
-        // Устанавливаем текущее значение из настроек
         animationTypeComboBox.setValue(settings.getAnimationType());
-        
-        // Опционально: можно добавить подсказку при выборе
-        animationTypeComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                // Можно добавить логику для показа предпросмотра анимации
-                AppLogger.info("SettingsController: Выбрана анимация: " + newVal.getDisplayName());
+
+        // =========================
+        // 🎯 ЦЕНТРИРОВАНИЕ PREVIEW
+        // =========================
+        previewRoot.layoutBoundsProperty().addListener((obs, o, n) -> centerCircle());
+        centerCircle();
+    }
+
+    // =========================
+    // ▶ ПРОИГРЫВАНИЕ АНИМАЦИИ
+    // =========================
+    @FXML
+    private void handlePlayAnimation() {
+        AnimationType type = animationTypeComboBox.getValue();
+        if (type == null) return;
+
+        // Гарантируем корректное состояние
+        previewCircle.setOpacity(1);
+        previewCircle.setScaleX(1);
+        previewCircle.setScaleY(1);
+        previewCircle.setRadius(radiusSlider.getValue());
+        centerCircle();
+
+        // ❗ Используем ТОТ ЖЕ круг, как в игре
+        AnimationService.playAnimationByType(
+                type,
+                previewRoot,
+                previewCircle,
+                this::schedulePreviewRestore
+        );
+    }
+
+    // =========================
+    // ⏳ ВОЗВРАТ КРУГА С ЗАДЕРЖКОЙ
+    // =========================
+    private void schedulePreviewRestore() {
+
+        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        delay.setOnFinished(e -> {
+
+            // Если круг был удалён анимацией — возвращаем
+            if (!previewRoot.getChildren().contains(previewCircle)) {
+                previewRoot.getChildren().add(previewCircle);
             }
+
+            previewCircle.setRadius(radiusSlider.getValue());
+            previewCircle.setOpacity(1);
+            previewCircle.setScaleX(1);
+            previewCircle.setScaleY(1);
+
+            centerCircle();
         });
+
+        delay.play();
     }
 
-    private void updateLabel(int value) {
-        radiusValueLabel.setText(value + " px");
-    }
-
+    // =========================
+    // 💾 СОХРАНЕНИЕ И ВЫХОД
+    // =========================
     @FXML
     private void handleSaveAndExit() {
-        // Сохраняем радиус (существующая логика)
-        int newRadius = ((int) Math.round(radiusSlider.getValue() / 10)) * 10;
-        settings.setRadius(newRadius);
-        
-        // Сохраняем выбранный тип анимации (новая логика)
-        AnimationType selectedAnimation = animationTypeComboBox.getValue();
-        if (selectedAnimation != null) {
-            settings.setAnimationType(selectedAnimation);
-        }
+        settings.setRadius((int) radiusSlider.getValue());
+        settings.setAnimationType(animationTypeComboBox.getValue());
 
         SettingsService.getInstance().saveHoverSettings(settings);
-        AppLogger.info("SettingsController: Настройки сохранены - радиус: " + newRadius + 
-                      ", анимация: " + (selectedAnimation != null ? selectedAnimation.getDisplayName() : "не выбрана"));
-        
         sceneManager.showMenu();
+    }
+
+    // =========================
+    // 🧭 ВСПОМОГАТЕЛЬНОЕ
+    // =========================
+    private void centerCircle() {
+        previewCircle.setCenterX(previewRoot.getWidth() / 2);
+        previewCircle.setCenterY(previewRoot.getHeight() / 2);
+    }
+
+    private void updateRadiusLabel(int value) {
+        radiusValueLabel.setText(value + " px");
     }
 }

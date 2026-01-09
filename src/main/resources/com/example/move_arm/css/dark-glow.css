@@ -1,124 +1,188 @@
-/* ======== ГЛОБАЛЬНЫЙ ТЕМНЫЙ СТИЛЬ ======== */
+/* =================================================
+   GLOBAL
+   ================================================= */
 
 .root {
-    -fx-background-color: #1e1e1e;
-    -fx-font-family: "Segoe UI", sans-serif;
-    -fx-text-fill: #ddd;
+    -fx-background-color: #1f1f1f;
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+    -fx-text-fill: #d8d8d8;
 }
 
-/* ======== ТЕКСТ ======== */
+/* =================================================
+   TEXT
+   ================================================= */
 
 .label {
-    -fx-text-fill: #ddd;
+    -fx-text-fill: #d8d8d8;
 }
 
 .title-label {
-    -fx-font-size: 28px;
+    -fx-font-size: 30px;
+    -fx-font-weight: 600;
     -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
 }
 
 .subtitle-label {
     -fx-font-size: 20px;
+    -fx-font-weight: 500;
     -fx-text-fill: #eeeeee;
 }
 
-/* ======== КНОПКИ ======== */
+/* =================================================
+   PANELS / CARDS
+   ================================================= */
+
+.panel-card {
+    -fx-background-color: #262626;
+    -fx-padding: 26 30;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #2f2f2f;
+}
+
+/* =================================================
+   INPUTS
+   ================================================= */
+
+.text-field {
+    -fx-background-color: #1b1b1b;
+    -fx-text-fill: #f0f0f0;
+    -fx-prompt-text-fill: #7a7a7a;
+    -fx-font-size: 14px;
+
+    -fx-padding: 10 12;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #3a3a3a;
+}
+
+.text-field:focused {
+    -fx-border-color: #8a8a8a;
+}
+
+/* =================================================
+   BUTTONS — ОБЩИЙ СТИЛЬ
+   ================================================= */
 
 .button {
-    -fx-background-color: #222;
-    -fx-text-fill: #fff;
-    -fx-font-size: 16px;
-    -fx-padding: 10 20;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: #444;
+    -fx-background-color: #2a2a2a;
+    -fx-text-fill: #e6e6e6;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
 
-    /* glow */
-    -fx-effect: dropshadow(gaussian, rgba(255, 85, 85, 0.25), 10, 0, 0, 0);
+    -fx-padding: 10 18;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #3a3a3a;
+
+    -fx-cursor: hand;
 }
 
 .button:hover {
-    -fx-background-color: #333;
-    -fx-effect: dropshadow(gaussian, rgba(255, 85, 85, 0.45), 16, 0, 0, 0);
+    -fx-background-color: #323232;
 }
 
 .button:pressed {
-    -fx-background-color: #111;
+    -fx-background-color: #242424;
 }
 
-/* Кнопка-Акцент */
+/* =================================================
+   ACCENT BUTTON (основное действие)
+   ================================================= */
 
 .accent-button {
-    -fx-background-color: linear-gradient(to bottom, #ff6666, #ff4444);
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: transparent;
+}
 
+.accent-button:hover {
+    -fx-background-color: #424242;
+}
+
+.accent-button:pressed {
+    -fx-background-color: #333333;
+}
+
+/* =================================================
+   SECONDARY BUTTON
+   ================================================= */
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cccccc;
+    -fx-border-color: #3a3a3a;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #2a2a2a;
+}
+
+/* =================================================
+   DANGER BUTTON (аккуратный, не агрессивный)
+   ================================================= */
+
+.danger-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c96a6a;
+    -fx-border-color: transparent;
+}
+
+.danger-button:hover {
+    -fx-text-fill: #e08b8b;
+}
+
+/* =================================================
+   HYPERLINK
+   ================================================= */
+
+.hyperlink {
+    -fx-text-fill: #9f9f9f;
+    -fx-border-color: transparent;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: #cccccc;
+}
+
+/* =================================================
+   LIST VIEW
+   ================================================= */
+
+.list-view {
+    -fx-background-color: #1c1c1c;
+    -fx-border-color: #3a3a3a;
     -fx-background-radius: 10;
     -fx-border-radius: 10;
-    -fx-effect: dropshadow(gaussian, rgba(255, 85, 85, 0.45), 15, 0, 0, 0);
 }
 
-/* ======== ПАНЕЛИ ======== */
-
-.dark-panel {
-    -fx-background-color: #2a2a2a;
-    -fx-background-radius: 10;
-    -fx-padding: 20;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 12, 0, 0, 0);
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #d8d8d8;
 }
 
-.top-bar {
-    -fx-background-color: linear-gradient(to bottom, #333, #222);
-    -fx-padding: 10;
+.list-cell:selected {
+    -fx-background-color: #3a3a3a;
 }
 
-.bottom-bar {
-    -fx-background-color: linear-gradient(to bottom, #222, #111);
-    -fx-padding: 10;
-}
+/* =================================================
+   CHARTS (оставлены спокойными)
+   ================================================= */
 
-/* ======== CHARTS ======== */
-
-.chart-legend {
-    -fx-text-fill: white;
+.chart {
+    -fx-background-color: #2b2b2b;
 }
 
 .chart-plot-background {
     -fx-background-color: #2b2b2b;
 }
 
-.chart-vertical-grid-lines {
-    -fx-stroke: #444;
-}
+.chart-vertical-grid-lines,
 .chart-horizontal-grid-lines {
     -fx-stroke: #444;
 }
 
-.axis .tick-label {
+.axis .tick-label,
+.axis .axis-label {
     -fx-text-fill: #cccccc;
 }
-.axis .axis-label {
-    -fx-text-fill: #eeeeee;
-}
-
-/* ======== PREVIEW / SETTINGS ======== */
-
-.preview-box {
-    -fx-border-color: #444;
-    -fx-border-style: dashed;
-    -fx-border-radius: 10;
-}
-
-.scroll-pane {
-    -fx-background: #1e1e1e;
-}
-
-.scroll-pane .viewport {
-    -fx-background-color: transparent;
-}
-
-.chart {
-    -fx-background-color: #2b2b2b; /* тёмный фон */
-}
-
