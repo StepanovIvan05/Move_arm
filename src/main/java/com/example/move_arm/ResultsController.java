@@ -91,10 +91,12 @@ public class ResultsController {
     }
 
     @FXML private void handleRestartButton() {
+        gameService.clear();
         sceneManager.startNewGame();
     }
 
     @FXML private void handleToMenuButton() {
+        gameService.clear();
         sceneManager.showMenu();
     }
 

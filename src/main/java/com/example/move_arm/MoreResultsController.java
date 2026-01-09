@@ -131,6 +131,7 @@ public class MoreResultsController {
 
     @FXML
     private void handleToMenuButton() {
+        gameService.clear();
         try {
             sceneManager.showMenu();
         } catch (Exception e) {

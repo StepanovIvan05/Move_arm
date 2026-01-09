@@ -93,11 +93,13 @@ public class SceneManager {
     }
 
     public void showResults(){
+        removeFromCache(RESULTS);
         ResultsController ctrl = loadScene(RESULTS, "/com/example/move_arm/results-view.fxml", ResultsController.class);
         ctrl.setSceneManager(this);
     }
 
     public void showMoreResults(){
+        removeFromCache(MORERESULTS);
         MoreResultsController ctrl = loadScene(MORERESULTS, "/com/example/move_arm/more-results-view.fxml", MoreResultsController.class);
         ctrl.setSceneManager(this);
     }
@@ -136,6 +138,11 @@ public class SceneManager {
         });
     }
 
+public void removeFromCache(String sceneKey) {
+    sceneCache.remove(sceneKey);
+    controllers.remove(sceneKey);
+    AppLogger.info("SceneManager: Сцена '" + sceneKey + "' удалена из кэша");
+}
 
 public void showHoldGame() {
     String sceneKey = "holdGame";
