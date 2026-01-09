@@ -193,86 +193,119 @@ public class HoldGameController {
     }
 
     private void spawnHoldTarget() {
-    if (!gameActive) return;
-
-    double paneWidth = gameRoot.getWidth();
-    double paneHeight = gameRoot.getHeight();
-    if (paneWidth <= 0 || paneHeight <= 0) return;
-
-    int radius = settings.getRadius();
-
-    double x = random.nextDouble() * (paneWidth - radius * 2);
-    double y = random.nextDouble() * (paneHeight - radius * 2);
-
-    Color color = Color.rgb(
-            random.nextInt(256),
-            random.nextInt(256),
-            random.nextInt(256),
-            1.0
-    );
-
-    final HoldTarget[] ref = new HoldTarget[1];
-
-    final double centerX = x + radius;
-    final double centerY = y + radius;
-
-    Runnable onComplete = () -> {
         if (!gameActive) return;
 
-        long relNs = System.nanoTime() - gameStartTimeNs;
+        double paneWidth = gameRoot.getWidth();
+        double paneHeight = gameRoot.getHeight();
+        if (paneWidth <= 0 || paneHeight <= 0) return;
 
+        int radius = settings.getRadius();
 
-        if (hoverSound != null) hoverSound.play();
+        double x = random.nextDouble() * (paneWidth - radius * 2);
+        double y = random.nextDouble() * (paneHeight - radius * 2);
 
-        score++;
-        scoreLabel.setText("Очки: " + score);
-        activeCircles--;
+        Color color = Color.rgb(
+                random.nextInt(256),
+                random.nextInt(256),
+                random.nextInt(256),
+                1.0
+        );
 
-        HoldTarget target = ref[0];
+        // Списки для накопления координат курсора
+        final List<Double> cursorXList = new ArrayList<>();
+        final List<Double> cursorYList = new ArrayList<>();
 
-        AtomicReference<Double> cursorX = new AtomicReference<>((double) 0);
-        AtomicReference<Double> cursorY = new AtomicReference<>((double) 0);
+        final double centerX = x + radius;
+        final double centerY = y + radius;
 
+        Runnable onComplete = () -> {
+            if (!gameActive) return;
+
+            long relNs = System.nanoTime() - gameStartTimeNs;
+
+            if (hoverSound != null) hoverSound.play();
+
+            score++;
+            scoreLabel.setText("Очки: " + score);
+            activeCircles--;
+
+            // Вычисляем среднее положение курсора
+            double avgCursorX = centerX; // fallback - центр круга
+            double avgCursorY = centerY;
+
+            if (!cursorXList.isEmpty() && !cursorYList.isEmpty()) {
+                avgCursorX = cursorXList.stream().mapToDouble(Double::doubleValue).average().orElse(centerX);
+                avgCursorY = cursorYList.stream().mapToDouble(Double::doubleValue).average().orElse(centerY);
+            }
+
+            // Сохраняем данные
+            clickData.add(new ClickData(relNs, avgCursorX, avgCursorY, x, y, radius));
+
+            // Также можно сохранить количество измерений
+            // clickData.add(new ClickData(relNs, avgCursorX, avgCursorY, x, y, radius, cursorXList.size()));
+
+            // Удаляем круг
+            gameRoot.getChildren().removeIf(node ->
+                    node instanceof HoldTarget &&
+                            Math.abs(((HoldTarget) node).getLayoutX() - x) < 0.1 &&
+                            Math.abs(((HoldTarget) node).getLayoutY() - y) < 0.1
+            );
+
+            // Анимация взрыва
+            Circle explosionDummy = new Circle(radius);
+            explosionDummy.setCenterX(centerX);
+            explosionDummy.setCenterY(centerY);
+            explosionDummy.setFill(color);
+
+            gameRoot.getChildren().add(explosionDummy);
+
+            try {
+                AnimationService.playDestructionAnimation(gameRoot, explosionDummy, null);
+            } catch (Exception ignored) {}
+
+            // Очистка после анимации
+            new Timeline(new KeyFrame(Duration.millis(500), e -> {
+                gameRoot.getChildren().remove(explosionDummy);
+            })).play();
+
+            if (activeCircles < settings.getMaxCirclesCount()) {
+                spawnHoldTarget();
+            }
+        };
+
+        HoldTarget target = new HoldTarget(
+                radius,
+                color,
+                HOLD_TIME_SECONDS,
+                onComplete
+        );
+
+        // Собираем координаты курсора
         target.setOnMouseMoved(event -> {
-            cursorX.set(event.getX());
-            cursorY.set(event.getY());
+            // Координаты относительно сцены (более точные)
+            double sceneX = event.getSceneX();
+            double sceneY = event.getSceneY();
+
+            // Или координаты относительно круга + позиция круга
+            // double circleX = event.getX() + target.getLayoutX();
+            // double circleY = event.getY() + target.getLayoutY();
+
+            cursorXList.add(sceneX);
+            cursorYList.add(sceneY);
+
+            // Ограничиваем размер списка, если нужно (например, последние 100 измерений)
+            if (cursorXList.size() > 100) {
+                cursorXList.remove(0);
+                cursorYList.remove(0);
+            }
         });
 
-        clickData.add(new ClickData(relNs, cursorX.get(), cursorY.get(), x, y, radius));
+        target.setLayoutX(x);
+        target.setLayoutY(y);
 
-        if (target != null) {
-            gameRoot.getChildren().remove(target);
-        }
-
-        Circle explosionDummy = new Circle(radius);
-        explosionDummy.setCenterX(centerX);
-        explosionDummy.setCenterY(centerY);
-        explosionDummy.setFill(color);
-
-        gameRoot.getChildren().add(explosionDummy);
-
-        try { AnimationService.playDestructionAnimation(gameRoot, explosionDummy, null); } catch (Exception ignored) {}
-
-        if (activeCircles < settings.getMaxCirclesCount()) {
-            spawnHoldTarget();
-        }
-    };
-
-    HoldTarget target = new HoldTarget(
-            radius,
-            color,
-            HOLD_TIME_SECONDS,
-            onComplete
-    );
-
-    ref[0] = target;
-
-    target.setLayoutX(x);
-    target.setLayoutY(y);
-
-    gameRoot.getChildren().add(target);
-    activeCircles++;
-}
+        gameRoot.getChildren().add(target);
+        activeCircles++;
+    }
 
 
     @FXML
