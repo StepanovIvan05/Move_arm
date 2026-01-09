@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.User;
 import com.example.move_arm.model.settings.HoverGameSettings;
+import com.example.move_arm.service.AnimationService;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.SettingsService;
 
@@ -250,11 +251,7 @@ public class HoldGameController {
 
         gameRoot.getChildren().add(explosionDummy);
 
-        DestroyAnimationService.playContourCollapse(
-                gameRoot,
-                explosionDummy,
-                () -> gameRoot.getChildren().remove(explosionDummy)
-        );
+        try { AnimationService.playDestructionAnimation(gameRoot, explosionDummy, null); } catch (Exception ignored) {}
 
         if (activeCircles < settings.getMaxCirclesCount()) {
             spawnHoldTarget();
@@ -292,7 +289,7 @@ public class HoldGameController {
         if (timer != null) timer.stop();
         gameActive = false;
         SceneManager mgr = (sceneManager != null) ? sceneManager : SceneManager.get();
-        if (mgr != null) mgr.showStart();
+        if (mgr != null) mgr.showMenu();
     }
     
     @FXML 
