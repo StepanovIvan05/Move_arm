@@ -7,6 +7,7 @@ import com.example.move_arm.model.GameResult;
 import com.example.move_arm.model.GameType;
 import com.example.move_arm.model.HoldAttempt;
 import com.example.move_arm.model.Statistics;
+import com.example.move_arm.model.TripletRecord;
 import com.example.move_arm.model.User;
 
 public class GameService {
@@ -19,6 +20,7 @@ public class GameService {
     private final HoldGameService holdGameService = new HoldGameService();
     private final GameCacheService cacheService = new GameCacheService();
     private final ResultService resultService = new ResultService();
+    private final NeuralTripletService neuralTripletService = NeuralTripletService.getInstance();
 
     public static GameService getInstance() {
         return INSTANCE;
@@ -93,5 +95,43 @@ public class GameService {
 
     public void clear() {
         cacheService.clear();
+    }
+    public void saveTriplet(
+            int userId,
+            long timestamp,
+            int tripletIndex,
+            long spawnNs,
+            int t1Cell,
+            int t2Cell,
+            int t3Cell,
+            int hitTargetIndex,
+            long hitTtkNs,
+            int radius,
+            double centroidRow,
+            double centroidCol,
+            double t1Angle,
+            double t2Angle,
+            double t3Angle,
+            double hitToMiss1Dist,
+            double hitToMiss2Dist,
+            double miss1ToMiss2Dist,
+            double spread,
+            int screenWidth,
+            int screenHeight,
+            int previousHitCell) {
+        
+        neuralTripletService.saveTriplet(
+            userId, timestamp, tripletIndex, spawnNs,
+            t1Cell, t2Cell, t3Cell, hitTargetIndex, hitTtkNs, radius,
+            centroidRow, centroidCol, t1Angle, t2Angle, t3Angle,
+            hitToMiss1Dist, hitToMiss2Dist, miss1ToMiss2Dist, spread,
+            screenWidth, screenHeight, previousHitCell 
+        );
+    }
+    public void saveTripletsBatch(List<TripletRecord> records) {
+        neuralTripletService.saveTripletsBatch(records);
+    }
+    public void setCurrentGameTypeToNeural() {
+        gameTypeService.setCurrentGameTypeString("neural"); // или как у тебя хранится
     }
 }

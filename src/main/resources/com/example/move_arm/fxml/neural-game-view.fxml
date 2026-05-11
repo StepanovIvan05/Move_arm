@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.Circle?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.move_arm.ui.view.NeuralGameViewImpl"
+            stylesheets="@../css/dark-glow.css">
+
+    <!-- Верхняя панель -->
+    <HBox fx:id="topPanel" spacing="18" alignment="CENTER_LEFT"
+          AnchorPane.topAnchor="10" AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20">
+        
+    </HBox>
+
+    <!-- Игровое поле -->
+    <Pane fx:id="gameRoot"
+          AnchorPane.topAnchor="50"
+          AnchorPane.bottomAnchor="60"
+          AnchorPane.leftAnchor="20"
+          AnchorPane.rightAnchor="20"
+          styleClass="game-field"/>
+
+    <!-- Нижняя панель -->
+    <HBox spacing="16" alignment="CENTER"
+          AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20">
+        <Button fx:id="menuButton" text="В меню" onAction="#handleToMenu"
+                styleClass="secondary-button"/>
+        <Button fx:id="restartButton" text="Заново" onAction="#handleRestart"
+                styleClass="accent-button"/>
+    </HBox>
+
+</AnchorPane>

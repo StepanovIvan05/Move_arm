@@ -149,6 +149,37 @@ public class DatabaseManager {
                     FOREIGN KEY(user_id) REFERENCES users(id)
                     );
                     """);
+            s.execute("""
+                CREATE TABLE IF NOT EXISTS target_triplets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    timestamp INTEGER,
+                    triplet_index INTEGER NOT NULL,
+                    spawn_ns INTEGER NOT NULL,
+                    t1_cell INTEGER NOT NULL,
+                    t2_cell INTEGER NOT NULL,
+                    t3_cell INTEGER NOT NULL,
+                    hit_target_index INTEGER NOT NULL,
+                    hit_ttk_ns INTEGER NOT NULL,
+                    radius INTEGER NOT NULL,
+                    centroid_row REAL,
+                    centroid_col REAL,
+                    t1_angle REAL,
+                    t2_angle REAL,
+                    t3_angle REAL,
+                    hit_to_miss1_dist REAL,
+                    hit_to_miss2_dist REAL,
+                    miss1_to_miss2_dist REAL,
+                    spread REAL,
+                    screen_width INTEGER,
+                    screen_height INTEGER,
+                    previous_hit_cell INTEGER DEFAULT -1
+                );
+                """);
+                s.execute("""
+                    INSERT OR IGNORE INTO game_types(name, description)
+                    VALUES ('neural', 'Neural RL training mode');
+                """);
 
         } catch (Exception e) {
             throw new RuntimeException("Не удалось инициализировать схему БД", e);

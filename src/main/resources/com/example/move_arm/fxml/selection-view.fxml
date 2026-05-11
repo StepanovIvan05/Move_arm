@@ -66,6 +66,17 @@
                             styleClass="accent-button"/>
                 </VBox>
 
+                <VBox spacing="12"
+                      alignment="CENTER"
+                      prefWidth="260"
+                      styleClass="panel-card">
+                    <Label text="Neural" styleClass="subtitle-label"/>
+                    <Label text="Тренируйте нейросеть своей игрой. Адаптивная сложность."
+                           wrapText="true" maxWidth="220" styleClass="caption-label"/>
+                    <Button fx:id="neuralButton" text="Тренировать"
+                            prefWidth="140" styleClass="accent-button"/>
+                </VBox>
+
             </HBox>
 
             <!-- Разделитель -->

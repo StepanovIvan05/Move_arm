@@ -1,16 +1,15 @@
 package com.example.move_arm.comtroller;
 
 import java.util.List;
-import java.util.Objects;
 
-import com.example.move_arm.util.AppLogger;
-import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.database.ClickDao;
 import com.example.move_arm.database.HoldAttemptDao;
-import com.example.move_arm.model.ClickData; // Не забудь импорт
+import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.GameResult;
 import com.example.move_arm.model.HoldAttempt;
-import com.example.move_arm.service.GameService;
+import com.example.move_arm.service.GameService; // Не забудь импорт
+import com.example.move_arm.ui.SceneManager;
+import com.example.move_arm.util.AppLogger;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -35,6 +34,7 @@ public class ResultsController {
     private final HoldAttemptDao holdAttemptDao = new HoldAttemptDao(); // Добавлено
 
     public void setSceneManager(SceneManager manager) { this.sceneManager = manager; }
+    private boolean isNeuralMode = false;
 
     @FXML
     public void initialize() {
@@ -198,13 +198,21 @@ public class ResultsController {
         statsGrid.add(new Label(valueText), 1, row);
     }
 
-    @FXML private void handleRestartButton() {
-        if(Objects.equals(gameService.getCurrentGameTypeString(), "hold")){
-            gameService.clear();
+    @FXML
+    private void handleRestartButton() {
+        gameService.clear();
+
+        String currentType = gameService.getCurrentGameTypeString();
+
+        if ("neural".equalsIgnoreCase(currentType)) {
+            AppLogger.info("ResultsController: Рестарт Neural режима");
+            sceneManager.startNeuralGame();
+        } 
+        else if ("hold".equals(currentType)) {
             sceneManager.showHoldGame();
-        }
+        } 
         else {
-            gameService.clear();
+            // обычный hover
             sceneManager.startNewGame();
         }
     }
@@ -257,5 +265,9 @@ public class ResultsController {
                 createLegendItem("Успех", "#2ecc71"),
                 createLegendItem("Срыв", "#e74c3c")
         );
+    }
+    public void setIsNeuralMode(boolean neural) {
+        this.isNeuralMode = neural;
+        AppLogger.info("ResultsController: Neural mode = " + neural);
     }
 }

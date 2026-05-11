@@ -42,6 +42,7 @@ public class SceneManager {
     public static final String SELECTION = "selection";
     public static final String MENU = "menu";
     public static final String STATISTICS = "statistics";
+    public static final String NEURAL_GAME = "neural_game";
 
     private SceneManager(Stage stage) {
         this.primaryStage = stage;
@@ -230,5 +231,40 @@ public class SceneManager {
         if (viewCache.remove(key) != null) {
             AppLogger.info("SceneManager: Представление '" + key + "' удалено из кэша (для рестарта)");
         }
+    }
+    public void startNeuralGame() {
+        AppLogger.info("SceneManager: startNeuralGame() — запускаем Neural режим");
+
+        removeFromCache(NEURAL_GAME);
+
+        loadIntoRegion(NEURAL_GAME, "/com/example/move_arm/fxml/neural-game-view.fxml", ctrl -> {
+            AppLogger.info("SceneManager: Загружен контроллер Neural: " 
+                        + (ctrl != null ? ctrl.getClass().getName() : "null"));
+
+            if (ctrl instanceof com.example.move_arm.ui.view.NeuralGameViewImpl view) {
+                AppLogger.info("SceneManager: Создаём NeuralGamePresenter");
+                com.example.move_arm.ui.presenter.NeuralGamePresenter presenter = 
+                    new com.example.move_arm.ui.presenter.NeuralGamePresenter(view, this);
+                presenter.startNewGame();
+
+            } else {
+                AppLogger.error("SceneManager: Неизвестный контроллер для Neural: " + ctrl);
+            }
+        });
+    }
+    /**
+ * Показывает экран результатов специально для Neural-режима
+ */
+    public void showNeuralResults() {
+        AppLogger.info("SceneManager: Показываем результаты Neural игры");
+        removeFromCache(RESULTS);
+        
+        loadIntoRegion(RESULTS, "/com/example/move_arm/fxml/results-view.fxml", ctrl -> {
+            if (ctrl instanceof ResultsController rc) {
+                rc.setIsNeuralMode(true);           // ← Важно!
+                // Можно также явно установить тип
+                // rc.setGameType("neural");
+            }
+        });
     }
 }

@@ -29,5 +29,19 @@ public class GameTypeService {
     public String getCurrentGameTypeString() {
         return currentGameType.getName();
     }
+    
+    public void setCurrentGameTypeString(String typeName) {
+        if (typeName == null) return;
+        
+        // Создаём "виртуальный" GameType для neural
+        if ("neural".equalsIgnoreCase(typeName)) {
+            this.currentGameType = new GameType(-1, "neural", "Neural RL Training Mode");
+            try {
+                dbManager.setAppProperty("last_game_type_id", "-1");
+                dbManager.setAppProperty("last_game_type_name", "neural");
+            } catch (Exception ignored) {}
+            return;
+        }
+    }
 
 }
