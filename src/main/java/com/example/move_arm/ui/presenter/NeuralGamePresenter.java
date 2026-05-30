@@ -8,7 +8,6 @@ import com.example.move_arm.model.TripletRecord;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.NeuralTripletGenerator;
-import com.example.move_arm.service.NeuralTripletGenerator.TripletData;
 import com.example.move_arm.service.SettingsService;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.ui.view.NeuralGameView;
@@ -120,50 +119,67 @@ public class NeuralGamePresenter {
     private void onNeuralTargetHit(NeuralHitEvent event) {
         if (!gameActive) return;
 
+        int clickedCell = event.cellIndex();
+        
+        // 1. Получаем ячейки, которые ОСТАЛИСЬ на экране (их должно быть 2)
+        List<TargetCell> remainingTargets = view.getActiveTargetsWithCells();
+        
+        // Кликнутая ячейка уже исчезла из view, значит в remainingTargets её нет.
+        // Всего на экране до клика было: clickedCell + эти две оставшиеся.
+        if (remainingTargets.size() < 2) {
+            AppLogger.info("NeuralGamePresenter: Критическая ошибка, на поле осталось меньше 2 целей!");
+            return;
+        }
+
         score++;
         view.setScore(score);
-
         int previousHitCell = lastHitCell;
 
-        generator.onHit(event.cellIndex(), event.lifetimeNs());
+        // Восстанавливаем тройку ячеек, которая была на экране в момент клика:
+        // Пусть clickedCell будет на первом месте (t1), а оставшиеся две — на t2 и t3.
+        int t1 = clickedCell;
+        int t2 = remainingTargets.get(0).cellIndex();
+        int t3 = remainingTargets.get(1).cellIndex();
 
-        TripletData data = generator.getLastData();
-        if (data != null && data.hitIndex >= 0) {
-            GeometryData geom = TripletGeometry.compute(
-                data.t1Cell, data.t2Cell, data.t3Cell, data.hitIndex);
+        // Так как мы сами назначили clickedCell как t1, то индекс попадания ВСЕГДА равен 0!
+        int hitTargetIndex = 0;
 
-            TripletRecord rec = new TripletRecord();
-            rec.tripletIndex = tripletCounter++;
-            rec.t1Cell = data.t1Cell;
-            rec.t2Cell = data.t2Cell;
-            rec.t3Cell = data.t3Cell;
-            rec.hitTargetIndex = data.hitIndex;
-            rec.hitTtkNs = data.hitTtkNs;
-            rec.spawnNs = data.spawnNs;
-            rec.radius = this.radius;
-            rec.screenWidth = (int) view.getWidth();
-            rec.screenHeight = (int) view.getHeight();
-            rec.centroidRow = geom.centroidRow;
-            rec.centroidCol = geom.centroidCol;
-            rec.t1Angle = geom.t1Angle;
-            rec.t2Angle = geom.t2Angle;
-            rec.t3Angle = geom.t3Angle;
-            rec.hitToMiss1Dist = geom.hitToMiss1Dist;
-            rec.hitToMiss2Dist = geom.hitToMiss2Dist;
-            rec.miss1ToMiss2Dist = geom.miss1ToMiss2Dist;
-            rec.spread = geom.spread;
-            rec.previousHitCell = previousHitCell;
+        // --- СТАРАЯ РОДНАЯ ЛОГИКА СОХРАНЕНИЯ ---
+        GeometryData geom = TripletGeometry.compute(t1, t2, t3, hitTargetIndex);
 
-            gameBuffer.add(rec);
-        }
+        TripletRecord rec = new TripletRecord();
+        rec.tripletIndex = tripletCounter++;
+        rec.t1Cell = t1;
+        rec.t2Cell = t2;
+        rec.t3Cell = t3;
+        rec.hitTargetIndex = hitTargetIndex;
+        rec.hitTtkNs = event.lifetimeNs();
+        rec.spawnNs = System.nanoTime(); 
+        rec.radius = this.radius;
+        rec.screenWidth = (int) view.getWidth();
+        rec.screenHeight = (int) view.getHeight();
+        rec.centroidRow = geom.centroidRow;
+        rec.centroidCol = geom.centroidCol;
+        rec.t1Angle = geom.t1Angle;
+        rec.t2Angle = geom.t2Angle;
+        rec.t3Angle = geom.t3Angle;
+        rec.hitToMiss1Dist = geom.hitToMiss1Dist;
+        rec.hitToMiss2Dist = geom.hitToMiss2Dist;
+        rec.miss1ToMiss2Dist = geom.miss1ToMiss2Dist;
+        rec.spread = geom.spread;
+        rec.previousHitCell = previousHitCell;
 
-        lastHitCell = event.cellIndex();
-        generator.reset();
+        gameBuffer.add(rec);
+        AppLogger.info("NeuralGamePresenter: Тройка успешно добавлена в буфер. В буфере: " + gameBuffer.size());
 
-        List<TargetCell> active = view.getActiveTargetsWithCells();
-        if (active.size() >= 2) {
-            spawnThirdTarget(active.get(0).cellIndex(), active.get(1).cellIndex());
-        }
+        lastHitCell = clickedCell;
+
+        // Передаем в генератор факт клика для истории скоростей
+        generator.onHit(clickedCell, event.lifetimeNs());
+
+        // --- ГЕНЕРАЦИЯ СЛЕДУЮЩЕЙ ЦЕЛИ ---
+        // Передаем генератору две выжившие ячейки, чтобы он нашел для них идеальную третью
+        spawnThirdTarget(t2, t3);
     }
 
     private void startTimer() {
@@ -184,7 +200,7 @@ public class NeuralGamePresenter {
             timer = null;
         }
 
-        saveGameData();
+        //saveGameData();
 
         // Важно: помечаем текущий режим
         gameService.setCurrentGameTypeToNeural();

@@ -9,6 +9,7 @@ import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.LevelGeneratorService;
 import com.example.move_arm.service.SettingsService;
+import com.example.move_arm.service.VectorTrajectoryGenerator;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.ui.view.GameView;
 import com.example.move_arm.ui.view.TargetHitEvent;
@@ -26,6 +27,7 @@ public class HoverGamePresenter {
     private final SettingsService settingsService;
     private final LevelGeneratorService levelGenerator;
     private final SceneManager sceneManager;
+    private final VectorTrajectoryGenerator trajectoryGenerator;
 
     private HoverGameSettings settings;
     private final List<ClickData> clickData = new ArrayList<>();
@@ -48,6 +50,7 @@ public class HoverGamePresenter {
         this.gameService = GameService.getInstance();
         this.settingsService = SettingsService.getInstance();
         this.levelGenerator = LevelGeneratorService.getInstance();
+        this.trajectoryGenerator = VectorTrajectoryGenerator.getInstance();
 
         view.setOnTargetHit(this::onTargetHit);
         view.setOnToMenu(this::goToMenu);
@@ -118,7 +121,7 @@ public class HoverGamePresenter {
         }
 
         // Получаем новые координаты
-        double[] coords = levelGenerator.nextPoint(paneWidth, paneHeight, settings.getRadius(), activePoints);
+        double[] coords = trajectoryGenerator.nextPoint(paneWidth, paneHeight, settings.getRadius(), activePoints);
 
         double x = coords[0];
         double y = coords[1];
