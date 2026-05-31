@@ -121,7 +121,7 @@ public class HoverGamePresenter {
         }
 
         // Получаем новые координаты
-        double[] coords = levelGenerator.nextPoint(paneWidth, paneHeight, settings.getRadius(), activePoints);
+        double[] coords = trajectoryGenerator.nextPoint(paneWidth, paneHeight, settings.getRadius(), activePoints);
 
         double x = coords[0];
         double y = coords[1];

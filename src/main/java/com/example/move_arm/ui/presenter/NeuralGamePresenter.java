@@ -31,7 +31,7 @@ public class NeuralGamePresenter {
     private final SceneManager sceneManager;
     private final NeuralTripletGenerator generator;
 
-    private final int radius = 40;                    // фиксированный радиус
+    private final int radius = 40; // фиксированный радиус мишени
 
     private HoverGameSettings settings;
     private Timeline timer;
@@ -43,7 +43,7 @@ public class NeuralGamePresenter {
 
     private int lastHitCell = -1;
 
-    // Буфер данных для БД
+    // Буфер данных для пакетной записи в БД
     private final List<TripletRecord> gameBuffer = new ArrayList<>();
     private int tripletCounter = 0;
 
@@ -121,11 +121,9 @@ public class NeuralGamePresenter {
 
         int clickedCell = event.cellIndex();
         
-        // 1. Получаем ячейки, которые ОСТАЛИСЬ на экране (их должно быть 2)
+        // Получаем ячейки, которые ОСТАЛИСЬ на экране (их должно быть ровно 2)
         List<TargetCell> remainingTargets = view.getActiveTargetsWithCells();
         
-        // Кликнутая ячейка уже исчезла из view, значит в remainingTargets её нет.
-        // Всего на экране до клика было: clickedCell + эти две оставшиеся.
         if (remainingTargets.size() < 2) {
             AppLogger.info("NeuralGamePresenter: Критическая ошибка, на поле осталось меньше 2 целей!");
             return;
@@ -135,16 +133,29 @@ public class NeuralGamePresenter {
         view.setScore(score);
         int previousHitCell = lastHitCell;
 
-        // Восстанавливаем тройку ячеек, которая была на экране в момент клика:
-        // Пусть clickedCell будет на первом месте (t1), а оставшиеся две — на t2 и t3.
-        int t1 = clickedCell;
-        int t2 = remainingTargets.get(0).cellIndex();
-        int t3 = remainingTargets.get(1).cellIndex();
-
-        // Так как мы сами назначили clickedCell как t1, то индекс попадания ВСЕГДА равен 0!
+        // Честное восстановление исходных ролей целей для БД на основе генератора логов
+        NeuralTripletGenerator.TripletData lastGenData = generator.getLastData();
+        
+        int t1, t2, t3;
         int hitTargetIndex = 0;
 
-        // --- СТАРАЯ РОДНАЯ ЛОГИКА СОХРАНЕНИЯ ---
+        if (lastGenData != null) {
+            t1 = lastGenData.t1Cell;
+            t2 = lastGenData.t2Cell;
+            t3 = lastGenData.t3Cell;
+            
+            if (clickedCell == t1) hitTargetIndex = 0;
+            else if (clickedCell == t2) hitTargetIndex = 1;
+            else if (clickedCell == t3) hitTargetIndex = 2;
+        } else {
+            // Резервный фолбэк для первого выстрела
+            t1 = clickedCell;
+            t2 = remainingTargets.get(0).cellIndex();
+            t3 = remainingTargets.get(1).cellIndex();
+            hitTargetIndex = 0;
+        }
+
+        // Вычисляем честную геометрию без сдвигов и хардкода
         GeometryData geom = TripletGeometry.compute(t1, t2, t3, hitTargetIndex);
 
         TripletRecord rec = new TripletRecord();
@@ -152,7 +163,7 @@ public class NeuralGamePresenter {
         rec.t1Cell = t1;
         rec.t2Cell = t2;
         rec.t3Cell = t3;
-        rec.hitTargetIndex = hitTargetIndex;
+        rec.hitTargetIndex = hitTargetIndex; 
         rec.hitTtkNs = event.lifetimeNs();
         rec.spawnNs = System.nanoTime(); 
         rec.radius = this.radius;
@@ -170,16 +181,15 @@ public class NeuralGamePresenter {
         rec.previousHitCell = previousHitCell;
 
         gameBuffer.add(rec);
-        AppLogger.info("NeuralGamePresenter: Тройка успешно добавлена в буфер. В буфере: " + gameBuffer.size());
+        AppLogger.info("NeuralGamePresenter: Тройка добавлена в буфер. Всего: " + gameBuffer.size());
 
         lastHitCell = clickedCell;
 
-        // Передаем в генератор факт клика для истории скоростей
+        // Оповещаем историю генератора о совершенном попадании
         generator.onHit(clickedCell, event.lifetimeNs());
 
-        // --- ГЕНЕРАЦИЯ СЛЕДУЮЩЕЙ ЦЕЛИ ---
-        // Передаем генератору две выжившие ячейки, чтобы он нашел для них идеальную третью
-        spawnThirdTarget(t2, t3);
+        // Передаем генератору две выжившие ячейки из JavaFX, чтобы он построил на них адаптивное продолжение
+        spawnThirdTarget(remainingTargets.get(0).cellIndex(), remainingTargets.get(1).cellIndex());
     }
 
     private void startTimer() {
@@ -200,9 +210,7 @@ public class NeuralGamePresenter {
             timer = null;
         }
 
-        //saveGameData();
-
-        // Важно: помечаем текущий режим
+        saveGameData();
         gameService.setCurrentGameTypeToNeural();
 
         AppLogger.info("NeuralGamePresenter: Игра завершена → показываем результаты");
@@ -219,26 +227,22 @@ public class NeuralGamePresenter {
         }
 
         gameService.saveTripletsBatch(gameBuffer);
-        AppLogger.info("NeuralGamePresenter: сохранено " + gameBuffer.size() + " троек");
+        AppLogger.info("NeuralGamePresenter: Сохранено в БД: " + gameBuffer.size() + " троек");
     }
 
-    // ==================== Restart — ИСПРАВЛЕННЫЙ ====================
     private void restartGame() {
         AppLogger.info("NeuralGamePresenter: === РЕСТАРТ NEURAL ИГРЫ ===");
-
         gameActive = false;
         if (timer != null) {
             timer.stop();
             timer = null;
         }
-
         view.clearField();
         gameBuffer.clear();
         tripletCounter = 0;
         lastHitCell = -1;
         generator.reset();
 
-        // Запускаем заново
         startNewGame();
     }
 
@@ -248,7 +252,6 @@ public class NeuralGamePresenter {
         sceneManager.showMenu();
     }
 
-    // ==================== Вспомогательные методы ====================
     private int randomCell(int... exclude) {
         int cell;
         do {

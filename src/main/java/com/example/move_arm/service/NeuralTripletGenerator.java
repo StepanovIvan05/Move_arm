@@ -1,25 +1,33 @@
 package com.example.move_arm.service;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 import com.example.move_arm.util.TripletGeometry;
 import com.example.move_arm.util.TripletGeometry.GeometryData;
 
 /**
- * Генератор третьей цели в тройке на основе предсказаний модели CatBoost.
- * Реализует полный перебор свободных ячеек с расчётом математического ожидания TTK
- * через симуляцию трёх возможных сценариев клика (hitIndex от 0 до 2).
+ * Вероятностный адаптивный генератор мишеней под CatBoost.
+ * Переводит предсказанное время в вероятности. Исключает спавн в одной точке
+ * и динамически распределяет цели по всему экрану на основе "колеса рулетки".
  */
 public class NeuralTripletGenerator {
     
     private final Random random = new Random();
     private final CatBoostModelService modelService = CatBoostModelService.getInstance();
-    private TripletData lastData;
     
-    // История последних кликов (в миллисекундах) для расчета скользящих метрик
     private final LinkedList<Double> ttkHistory = new LinkedList<>();
+    private final LinkedList<Double> distanceHistory = new LinkedList<>();
+    
     private int lastHitCellGlobal = -1;
+    private double lastAngleGlobal = 0.0;
+    
+    private final int GRID_WIDTH = 12;
+    private final float FIXED_RADIUS = 40.0f;
+
+    private TripletData lastData;
 
     public static class TripletData {
         public int t1Cell, t2Cell, t3Cell;
@@ -28,152 +36,212 @@ public class NeuralTripletGenerator {
         public int hitIndex = -1;
         public long hitTtkNs = 0;
     }
-    
+
+    // Вспомогательный класс для хранения весов кандидатов
+    private static class CellCandidate {
+        int cellIndex;
+        double weight;
+        double predictedTtk;
+
+        CellCandidate(int cellIndex, double weight, double predictedTtk) {
+            this.cellIndex = cellIndex;
+            this.weight = weight;
+            this.predictedTtk = predictedTtk;
+        }
+    }
+
     /**
-     * Генерирует лучшую третью ячейку, сканируя все свободное поле и усредняя
-     * предсказания модели для всех возможных сценариев клика.
-     */
-    /**
-     * Генерирует третью ячейку, сканируя всё свободное поле и выбирая ту,
-     * для которой модель предсказывает МАКСИМАЛЬНОЕ время отклика (максимальную сложность).
+     * Генерирует третью ячейку, используя вероятностное распределение на основе предсказаний модели.
      */
     public int generateThirdCell(int active1, int active2, double screenW, double screenH) {
         int totalCells = 96; 
 
-        System.out.println("-> Генератор вызван! active1=" + active1 + ", active2=" + active2);
+        System.out.println("-> [PROBABILISTIC MODE] ИИ-Генератор вызван!");
 
         if (!modelService.isModelReady()) {
-            System.out.println("⚠️ ВНИМАНИЕ: CatBoostModelService.isModelReady() вернул FALSE! Откат на рандом.");
+            System.out.println("⚠️ Модель не загружена. Откат на рандом.");
             return generateRandomCell(active1, active2);
         }
 
-        int bestCell = -1;
-        // Инициализируем минимально возможным числом для поиска максимума
-        double maxPredictedTtk = Double.NEGATIVE_INFINITY; 
-        double minDelta = Double.POSITIVE_INFINITY; 
-        double bestPredictedTtk = 0.0;
-
+        // Фичи микро-тренда
         float rollingMean = calculateHistoryMean();
         float rollingStd = calculateHistoryStd(rollingMean);
         float ttkDelta = 0.0f;
-        if (!ttkHistory.isEmpty()) {
-            ttkDelta = (float) (rollingMean - ttkHistory.getLast());
+        if (ttkHistory.size() >= 2) {
+            ttkDelta = (float) (ttkHistory.get(ttkHistory.size() - 1) - ttkHistory.get(ttkHistory.size() - 2));
+        }
+        float prevVelocity = 0.01f; 
+        if (!distanceHistory.isEmpty() && !ttkHistory.isEmpty()) {
+            prevVelocity = (float) (distanceHistory.getLast() / ttkHistory.getLast());
         }
 
-        System.out.println(String.format("Текущая статистика сессии: rollingMean=%.2f, rollingStd=%.2f, ttkDelta=%.2f", 
-                rollingMean, rollingStd, ttkDelta));
+        int prevX = lastHitCellGlobal % GRID_WIDTH;
+        int prevY = lastHitCellGlobal / GRID_WIDTH;
+
+        List<CellCandidate> candidates = new ArrayList<>();
+        double totalWeight = 0.0;
 
         try {
-            // Полный перебор игрового поля
+            // Шаг 1: Собираем предсказания для всех доступных ячеек
             for (int candidateCell = 0; candidateCell < totalCells; candidateCell++) {
-                // Пропускаем уже занятые две мишени
-                if (candidateCell == active1 || 
-                    candidateCell == active2 || 
-                    candidateCell == lastHitCellGlobal) {
+                if (candidateCell == active1 || candidateCell == active2 || candidateCell == lastHitCellGlobal) {
                     continue;
                 }
 
                 String[] catFeatures = new String[] {
-                    String.valueOf(active1), String.valueOf(active2), String.valueOf(candidateCell), String.valueOf(lastHitCellGlobal)
+                    String.valueOf(active1), 
+                    String.valueOf(active2), 
+                    String.valueOf(candidateCell), 
+                    String.valueOf(lastHitCellGlobal)
                 };
 
-                double sumPredictedTtk = 0.0;
+                double sumTtk = 0.0;
+                boolean hasAnomaly = false;
 
-                // Симуляция трех сценариев клика
+                // Просчитываем 3 сценария клика
                 for (int simulatedHitIndex = 0; simulatedHitIndex < 3; simulatedHitIndex++) {
+                    int targetCell = (simulatedHitIndex == 0) ? active1 : (simulatedHitIndex == 1) ? active2 : candidateCell;
+                    
+                    int tX = targetCell % GRID_WIDTH;
+                    int tY = targetCell / GRID_WIDTH;
+
+                    double distance = Math.hypot(tX - prevX, tY - prevY);
+                    double angle = Math.atan2(tY - prevY, tX - prevX);
+                    float angleDelta = (float) Math.abs(angle - lastAngleGlobal);
+
+                    if (distance < 1.0) {
+                        hasAnomaly = true;
+                        break;
+                    }
+
                     GeometryData geom = TripletGeometry.compute(active1, active2, candidateCell, simulatedHitIndex);
 
                     float[] numFeatures = new float[] {
-                        (float) geom.centroidRow, (float) geom.centroidCol,
-                        (float) geom.t1Angle, (float) geom.t2Angle, (float) geom.t3Angle,
+                        (float) distance, (float) angle, (float) geom.centroidRow, (float) geom.centroidCol,
+                        (float) geom.distanceFromCenter, (float) geom.angleVariance, (float) geom.spread,
                         (float) geom.hitToMiss1Dist, (float) geom.hitToMiss2Dist, (float) geom.miss1ToMiss2Dist,
-                        (float) geom.spread, (float) geom.distanceFromCenter, (float) geom.angleVariance,
-                        rollingMean, rollingStd, ttkDelta
+                        FIXED_RADIUS, prevVelocity, angleDelta, rollingMean, rollingStd, ttkDelta
                     };
 
-                    sumPredictedTtk += modelService.predict(catFeatures, numFeatures);
+                    double predictedTtk = modelService.predict(catFeatures, numFeatures);
+                    
+                    // Отрезаем дикие галлюцинации модели
+                    if (predictedTtk > 1500.0) predictedTtk = 600.0;
+
+                    sumTtk += predictedTtk;
                 }
 
-                // Математическое ожидание времени отклика на данную тройку мишеней
-                double averagePredictedTtk = sumPredictedTtk / 3.0; // Добавляем небольшой буфер для смещения в сторону более сложных паттернов
+                if (hasAnomaly) continue;
 
-                // Изменяем условие: ищем строго НАИБОЛЬШЕЕ предсказанное время (самый сложный паттерн)
-                double currentDelta = Math.abs(averagePredictedTtk - rollingMean);
+                double averageTtk = sumTtk / 3.0;
 
-                // Ищем ячейку с МИНИМАЛЬНЫМ отклонением от rollingMean
-                if (currentDelta < minDelta) {
-                    minDelta = currentDelta;
-                    bestCell = candidateCell;
-                    bestPredictedTtk = averagePredictedTtk;
+                // Вычисляем физическое расстояние от курсора до проверяемого кандидата
+                int candX = candidateCell % GRID_WIDTH;
+                int candY = candidateCell / GRID_WIDTH;
+                double distFromCursor = Math.hypot(candX - prevX, candY - prevY);
+
+                // МЯГКИЙ ШТРАФ ЗА БЛИЗОСТЬ (Математический барьер):
+                // Если ячейка ближе чем на 3 шага, мы экспоненциально уменьшаем её базовый ТТК для расчета весов.
+                if (lastHitCellGlobal != -1 && distFromCursor < 3.0) {
+                    averageTtk *= (distFromCursor / 3.0); 
+                }
+
+                // Превращаем ТТК в вес. Используем смещение (-300), чтобы увеличить контраст между сложными и легкими целями
+                double weight = Math.exp((averageTtk - 300.0) / 100.0);
+                if (weight < 0.01) weight = 0.01; // минимальный вес, чтобы шанс не упал в ноль
+
+                candidates.add(new CellCandidate(candidateCell, weight, averageTtk));
+                totalWeight += weight;
+            }
+
+            // Шаг 2: Выбор случайной ячейки методом "Колеса Рулетки"
+            if (!candidates.isEmpty()) {
+                double targetRoll = random.nextDouble() * totalWeight;
+                double currentSum = 0.0;
+
+                for (CellCandidate candidate : candidates) {
+                    currentSum += candidate.weight;
+                    if (currentSum >= targetRoll) {
+                        int bestCell = candidate.cellIndex;
+                        System.out.println("🎲 [Рулетка] Выбрана ячейка: " + bestCell 
+                                + " (Предсказанный ТТК: " + String.format("%.2f", candidate.predictedTtk) + " мс, Вес: " + String.format("%.2f", candidate.weight) + ")");
+                        
+                        // Запись метаданных
+                        recordMetadata(active1, active2, bestCell);
+                        return bestCell;
+                    }
                 }
             }
-            
-            System.out.println("✅ Модель успешно применилась! Выбрана самая сложная ячейка: " + bestCell 
-                    + " с ожидаемым TTK: " + String.format("%.2f", bestPredictedTtk) + " мс");
 
         } catch (Exception e) {
-            System.out.println("❌ КРИТИЧЕСКАЯ ОШИБКА ПРИ ПРЕДСКАЗАНИИ МОДЕЛИ:");
+            System.out.println("❌ Ошибка вероятностного расчета. Накатываем рандом.");
             e.printStackTrace();
         }
 
-        // Если перебор сломался или не нашел кандидатов, страхуемся рандомом
-        if (bestCell == -1) {
-            System.out.println("⚠️ Перебор завершился с ошибкой. Откат на рандом.");
-            bestCell = generateRandomCell(active1, active2);
-        }
+        int fallbackCell = generateRandomCell(active1, active2);
+        recordMetadata(active1, active2, fallbackCell);
+        return fallbackCell;
+    }
 
-        // КРИТИЧЕСКИЙ ФИКС: Инициализируем lastData, чтобы метод onHit() не падал по 'if (lastData == null) return;'
+    private void recordMetadata(int active1, int active2, int finalCell) {
         this.lastData = new TripletData();
         this.lastData.t1Cell = active1;
         this.lastData.t2Cell = active2;
-        this.lastData.t3Cell = bestCell;
-        this.lastData.spawnNs = System.nanoTime(); // Фиксируем время создания тройки
-
-        return bestCell;
+        this.lastData.t3Cell = finalCell;
+        this.lastData.spawnNs = System.nanoTime();
     }
     
+    public void onHit(int hitCell, long lifetimeNs) {
+        double currentTtkMs = lifetimeNs / 1_000_000.0;
+        if (currentTtkMs > 3000.0) currentTtkMs = 3000.0;
+
+        if (lastHitCellGlobal != -1) {
+            int prevX = lastHitCellGlobal % GRID_WIDTH;
+            int prevY = lastHitCellGlobal / GRID_WIDTH;
+            int currX = hitCell % GRID_WIDTH;
+            int currY = hitCell / GRID_WIDTH;
+            double actualDistance = Math.hypot(currX - prevX, currY - prevY);
+            distanceHistory.addLast(actualDistance);
+            lastAngleGlobal = Math.atan2(currY - prevY, currX - prevX);
+        } else {
+            distanceHistory.addLast(0.0);
+            lastAngleGlobal = 0.0;
+        }
+
+        ttkHistory.addLast(currentTtkMs);
+        if (ttkHistory.size() > 5) ttkHistory.removeFirst();
+        if (distanceHistory.size() > 5) distanceHistory.removeFirst();
+        
+        if (lastData != null) {
+            lastData.hitTtkNs = lifetimeNs;
+            if (hitCell == lastData.t1Cell) lastData.hitIndex = 0;
+            else if (hitCell == lastData.t2Cell) lastData.hitIndex = 1;
+            else if (hitCell == lastData.t3Cell) lastData.hitIndex = 2;
+        }
+
+        lastHitCellGlobal = hitCell;
+    }
+    
+    public void reset() {
+        ttkHistory.clear();
+        distanceHistory.clear();
+        lastHitCellGlobal = -1;
+        lastAngleGlobal = 0.0;
+        lastData = null;
+    }
+
+    public TripletData getLastData() { return lastData; }
+
     private int generateRandomCell(int active1, int active2) {
         int cell;
         do {
             cell = random.nextInt(96);
-        } while (cell == active1 || cell == active2);
+        } while (cell == active1 || cell == active2 || cell == lastHitCellGlobal);
         return cell;
     }
 
-    /**
-     * Вызывается из Presenter при успешном клике по мишени.
-     */
-    public void onHit(int hitCell, long lifetimeNs) {
-        if (lastData == null) return;
-        
-        lastData.hitTtkNs = lifetimeNs;
-        lastHitCellGlobal = hitCell;
-        
-        // Переводим наносекунды в миллисекунды для скользящей истории кликов
-        double currentTtkMs = lifetimeNs / 1_000_000.0;
-        ttkHistory.addLast(currentTtkMs);
-        if (ttkHistory.size() > 5) {
-            ttkHistory.removeFirst(); // Держим окно ровно в 5 последних кликов
-        }
-        
-        if (hitCell == lastData.t1Cell) lastData.hitIndex = 0;
-        else if (hitCell == lastData.t2Cell) lastData.hitIndex = 1;
-        else if (hitCell == lastData.t3Cell) lastData.hitIndex = 2;
-    }
-    
-    /**
-     * Сброс состояния при перезапуске игры (вызывается из Presenter).
-     */
-    public void reset() {
-        lastData = null;
-        ttkHistory.clear();
-        lastHitCellGlobal = -1;
-    }
-
-    // --- Математический блок вычисления статистических фич ---
-
     private float calculateHistoryMean() {
-        if (ttkHistory.isEmpty()) return 450.0f; // Начальная точка адаптации
+        if (ttkHistory.isEmpty()) return 450.0f; 
         double sum = 0;
         for (double val : ttkHistory) sum += val;
         return (float) (sum / ttkHistory.size());
@@ -182,13 +250,7 @@ public class NeuralTripletGenerator {
     private float calculateHistoryStd(float mean) {
         if (ttkHistory.size() <= 1) return 0.0f;
         double sumSquares = 0;
-        for (double val : ttkHistory) {
-            sumSquares += Math.pow(val - mean, 2);
-        }
+        for (double val : ttkHistory) sumSquares += Math.pow(val - mean, 2);
         return (float) Math.sqrt(sumSquares / ttkHistory.size());
-    }
-
-    public TripletData getLastData() { 
-        return lastData; 
     }
 }

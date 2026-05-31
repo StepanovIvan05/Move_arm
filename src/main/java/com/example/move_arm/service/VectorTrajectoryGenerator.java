@@ -11,7 +11,7 @@ public class VectorTrajectoryGenerator implements PointGenerator {
     private double[] lastHitPoint = null;
 
     public enum Difficulty { EASY, MEDIUM, HARD }
-    private Difficulty currentDifficulty = Difficulty.HARD; // По умолчанию ставим на HARD, чтобы сразу было заметно отличие от рандома
+    private Difficulty currentDifficulty = Difficulty.EASY; // По умолчанию ставим на HARD, чтобы сразу было заметно отличие от рандома
 
     // Глобальные ограничения расстояний
     private static final double MIN_SAFE_DISTANCE = 100.0; // Базовая безопасность для Easy/Medium
