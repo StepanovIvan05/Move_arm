@@ -2,6 +2,7 @@ package com.example.move_arm.util;
 
 /**
  * Вычисление геометрических фич для тройки целей.
+ * Расширено под требования фичсеттинга CatBoost модели.
  */
 public class TripletGeometry {
     
@@ -10,6 +11,8 @@ public class TripletGeometry {
         public double t1Angle, t2Angle, t3Angle;
         public double hitToMiss1Dist, hitToMiss2Dist, miss1ToMiss2Dist;
         public double spread;
+        public double distanceFromCenter; // Новая фича
+        public double angleVariance;      // Новая фича
     }
     
     /**
@@ -47,6 +50,18 @@ public class TripletGeometry {
         
         // Spread — максимальное расстояние между любыми двумя
         g.spread = Math.max(d12, Math.max(d13, d23));
+        
+        // 1. Расстояние от центра масс тройки до центра экрана (сетки 8х12)
+        // В сетке 8x12 (индексы 0..7 и 0..11) геометрический центр находится в точках 3.5 и 5.5
+        double screenCenterRow = 3.5;
+        double screenCenterCol = 5.5;
+        g.distanceFromCenter = Math.hypot(g.centroidRow - screenCenterRow, g.centroidCol - screenCenterCol);
+        
+        // 2. Дисперсия углов (angle_variance)
+        double meanAngle = (g.t1Angle + g.t2Angle + g.t3Angle) / 3.0;
+        g.angleVariance = (Math.pow(g.t1Angle - meanAngle, 2) + 
+                           Math.pow(g.t2Angle - meanAngle, 2) + 
+                           Math.pow(g.t3Angle - meanAngle, 2)) / 3.0;
         
         return g;
     }
