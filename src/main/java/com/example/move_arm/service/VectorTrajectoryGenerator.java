@@ -13,30 +13,46 @@ public class VectorTrajectoryGenerator {
 
     private TrajectoryDifficulty currentDifficulty = TrajectoryDifficulty.MEDIUM;
 
+    // Состояние виртуальной траектории для EASY и MEDIUM
+    private double[] virtualHead = null;
+    private double currentAngle = 0.0;
+
+    // Глобальные константы безопасности и ограничений
     private static final double MIN_SAFE_DISTANCE = 100.0;
     private static final double HARD_LIVE_TARGET_DIST = 130.0;
 
+    // Параметры для EASY (Близкие цели, плавная змейка)
     private static final double EASY_DISTANCE = 120.0;
     private static final double EASY_MAX_ANGLE_DEV = 25.0;
 
+    // Параметры для MEDIUM (Далекие цели, размашистые зигзаги)
     private static final double MEDIUM_DISTANCE = 190.0;
     private static final double MEDIUM_MAX_ANGLE_DEV = 60.0;
 
+    // Параметры для HARD
     private static final double ABSOLUTE_HARD_MIN_DIST = 300.0;
     private static final double HARD_LINE_SAFE_MARGIN = 80.0;
-
-    private static final double[] DISTANCE_MULTIPLIERS = {1.0, 0.85, 0.70};
-    private static final int ANGLE_SAMPLES = 180;
 
     private VectorTrajectoryGenerator() {}
 
     public static synchronized VectorTrajectoryGenerator getInstance() {
-        if (instance == null) instance = new VectorTrajectoryGenerator();
+        if (instance == null) {
+            instance = new VectorTrajectoryGenerator();
+        }
         return instance;
     }
 
     public void setDifficulty(TrajectoryDifficulty difficulty) {
         this.currentDifficulty = difficulty;
+    }
+
+    /**
+     * Сброс виртуальной траектории. 
+     * ОБЯЗАТЕЛЬНО вызывать в HoverGamePresenter перед стартом новой игры.
+     */
+    public void resetTrajectory() {
+        this.virtualHead = null;
+        this.currentAngle = random.nextDouble() * 2 * Math.PI;
     }
 
     public double[] nextPoint(
@@ -47,56 +63,119 @@ public class VectorTrajectoryGenerator {
             double[] previousHit,
             double[] lastHit) {
 
+        // --- РЕЖИМ HARD: БЕЗКОМПРОМИССНЫЙ ХАОС ---
         if (currentDifficulty == TrajectoryDifficulty.HARD) {
-            return generateHardCoreRandomPoint(
-                    width,
-                    height,
-                    radius,
-                    liveTargets,
-                    lastHit,
-                    previousHit
-            );
+            return generateHardCoreRandomPoint(width, height, radius, liveTargets, lastHit, previousHit);
         }
 
-        boolean hasTrajectoryData =
-                previousHit != null &&
-                lastHit != null &&
-                liveTargets != null &&
-                liveTargets.size() >= 2;
+        // --- РЕЖИМЫ EASY И MEDIUM: УМНАЯ ЗМЕЙКА С ЗАЩИТОЙ ОТ НАЛОЖЕНИЙ И УГЛОВЫХ ТУПИКОВ ---
+        double margin = radius * 2.5;
 
-        double[] resultPoint;
+        // Если игра только началась (первый вызов), спавним первую точку в случайном безопасном месте
+        if (virtualHead == null) {
+            virtualHead = new double[]{
+                    margin + random.nextDouble() * (width - 2 * margin),
+                    margin + random.nextDouble() * (height - 2 * margin)
+            };
+            return virtualHead.clone();
+        }
 
-        if (!hasTrajectoryData) {
-            resultPoint = findRandomSafePoint(width, height, radius, liveTargets, null, MIN_SAFE_DISTANCE, width);
+        // Настройка шага и углов на основе сложности
+        double idealDistance = (currentDifficulty == TrajectoryDifficulty.EASY) ? EASY_DISTANCE : MEDIUM_DISTANCE;
+        double maxAngleDevRad = Math.toRadians(
+                (currentDifficulty == TrajectoryDifficulty.EASY) ? EASY_MAX_ANGLE_DEV : MEDIUM_MAX_ANGLE_DEV
+        );
+
+        // Расстояние между центрами кругов, при котором они начинают пересекаться (диаметр)
+        double safeOverlapDistanceSq = (radius * 2.0) * (radius * 2.0);
+
+        boolean pointFound = false;
+        double nextX = 0;
+        double nextY = 0;
+        double chosenAngle = currentAngle;
+
+        // Пробуем до 8 раз найти свободное направление. С каждой неудачной попыткой расширяем угол поиска.
+        for (int attempt = 0; attempt < 8; attempt++) {
+            double searchSpread = maxAngleDevRad + (attempt * Math.toRadians(20.0));
+            double angleDeviation = (random.nextDouble() * 2 - 1) * searchSpread;
+            double testAngle = currentAngle + angleDeviation;
+
+            double tx = virtualHead[0] + idealDistance * Math.cos(testAngle);
+            double ty = virtualHead[1] + idealDistance * Math.sin(testAngle);
+
+            // 1. Проверяем столкновение со стенами и применяем скольжение
+            boolean hitLeft = (tx < margin);
+            boolean hitRight = (tx > width - margin);
+            boolean hitTop = (ty < margin);
+            boolean hitBottom = (ty > height - margin);
+
+            if (hitLeft || hitRight || hitTop || hitBottom) {
+                double sin = Math.sin(currentAngle);
+                double cos = Math.cos(currentAngle);
+
+                if (hitLeft || hitRight) {
+                    testAngle = (sin < 0) ? -Math.PI / 2.0 : Math.PI / 2.0;
+                } else {
+                    testAngle = (cos < 0) ? Math.PI : 0.0;
+                }
+
+                tx = virtualHead[0] + idealDistance * Math.cos(testAngle);
+                ty = virtualHead[1] + idealDistance * Math.sin(testAngle);
+                
+                tx = clampToField(tx, margin, width);
+                ty = clampToField(ty, margin, height);
+            }
+
+            // 2. Проверяем, не накладывается ли новая точка на уже существующие круги
+            boolean overlaps = false;
+            if (liveTargets != null) {
+                for (double[] target : liveTargets) {
+                    double dx = tx - target[0];
+                    double dy = ty - target[1];
+                    if ((dx * dx + dy * dy) < safeOverlapDistanceSq) {
+                        overlaps = true;
+                        break;
+                    }
+                }
+            }
+
+            // Проверяем, сдвинулась ли змейка физически (защита от "залипания" в углах из-за зажима в clampToField)
+            double distToOldHeadSq = (tx - virtualHead[0]) * (tx - virtualHead[0]) + (ty - virtualHead[1]) * (ty - virtualHead[1]);
+            
+            // Если точка свободна и голова реально продвинется вперед, а не останется на месте
+            if (!overlaps && distToOldHeadSq > (radius * radius * 0.25)) {
+                nextX = tx;
+                nextY = ty;
+                chosenAngle = testAngle;
+                pointFound = true;
+                break;
+            }
+        }
+
+        // 3. Экстремальный выход из глухого угла (Поворот на 180 градусов назад)
+        if (!pointFound) {
+            // Если все пути заблокированы или зажаты, разворачиваем змейку вспять по собственной траектории
+            currentAngle = normalizeAngle(currentAngle + Math.PI);
+            
+            nextX = virtualHead[0] + idealDistance * Math.cos(currentAngle);
+            nextY = virtualHead[1] + idealDistance * Math.sin(currentAngle);
+
+            nextX = clampToField(nextX, margin, width);
+            nextY = clampToField(nextY, margin, height);
         } else {
-            double[] live1 = liveTargets.get(0);
-            double[] live2 = liveTargets.get(1);
-            double baseAngle = Math.atan2(
-                    lastHit[1] - previousHit[1],
-                    lastHit[0] - previousHit[0]
-            );
-
-            double idealDistance = (currentDifficulty == TrajectoryDifficulty.EASY) ? EASY_DISTANCE : MEDIUM_DISTANCE;
-
-            resultPoint = runMultipliersScan(lastHit, live1, live2, width, height, radius, idealDistance, baseAngle);
-
-            if (resultPoint == null) {
-                resultPoint = runWideAngleScan(lastHit, live1, live2, width, height, radius, idealDistance, baseAngle);
-            }
-
-            if (resultPoint == null) {
-                double maxLimit = (currentDifficulty == TrajectoryDifficulty.EASY) ? 220.0 : 350.0;
-                resultPoint = findRandomSafePoint(width, height, radius, liveTargets, lastHit, MIN_SAFE_DISTANCE, maxLimit);
-            }
+            currentAngle = normalizeAngle(chosenAngle);
         }
 
-        if (resultPoint == null) {
-            resultPoint = fallbackPoint(width, height, radius);
-        }
+        // Фиксируем новое положение виртуальной головы
+        virtualHead[0] = nextX;
+        virtualHead[1] = nextY;
 
-        return resultPoint;
+        return virtualHead.clone();
     }
 
+    /**
+     * Трехэтапный геометрический генератор хаоса для HARD режима.
+     */
     private double[] generateHardCoreRandomPoint(
             double w,
             double h,
@@ -173,114 +252,10 @@ public class VectorTrajectoryGenerator {
         return (numerator / denominator) < margin;
     }
 
-    private double[] runMultipliersScan(double[] lastHit, double[] live1, double[] live2,
-                                        double w, double h, int r, double idealDistance, double baseAngle) {
-        for (double multiplier : DISTANCE_MULTIPLIERS) {
-            double[] point = findPointAnalytical(lastHit, live1, live2, w, h, r, idealDistance * multiplier, baseAngle, false);
-            if (point != null) return point;
-        }
-        return null;
-    }
-
-    private double[] runWideAngleScan(double[] lastHit, double[] live1, double[] live2,
-                                      double w, double h, int r, double idealDistance, double baseAngle) {
-        for (double multiplier : DISTANCE_MULTIPLIERS) {
-            double[] point = findPointAnalytical(lastHit, live1, live2, w, h, r, idealDistance * multiplier, baseAngle, true);
-            if (point != null) return point;
-        }
-        return null;
-    }
-
-    private double[] findPointAnalytical(double[] start, double[] live1, double[] live2,
-                                         double w, double h, int r, double targetDist,
-                                         double baseAngle, boolean forceWideAngles) {
-
-        List<double[]> angleRanges = new ArrayList<>();
-        if (forceWideAngles) {
-            double dev = Math.toRadians(currentDifficulty == TrajectoryDifficulty.EASY ? 90.0 : 130.0);
-            angleRanges.add(new double[]{baseAngle - dev, baseAngle + dev});
-        } else {
-            double dev = Math.toRadians(currentDifficulty == TrajectoryDifficulty.EASY ? EASY_MAX_ANGLE_DEV : MEDIUM_MAX_ANGLE_DEV);
-            angleRanges.add(new double[]{baseAngle - dev, baseAngle + dev});
-        }
-
-        List<AngleSector> validSectors = new ArrayList<>();
-
-        for (double[] range : angleRanges) {
-            double angleMin = normalizeAngle(range[0]);
-            double angleMax = normalizeAngle(range[1]);
-            List<double[]> normalizedRanges = splitAngleRange(angleMin, angleMax);
-
-            for (double[] subRange : normalizedRanges) {
-                double subMin = subRange[0];
-                double subMax = subRange[1];
-                double step = (subMax - subMin) / ANGLE_SAMPLES;
-                if (step <= 0) continue;
-
-                Double sectorStart = null;
-                double prevAngle = subMin;
-
-                for (int i = 0; i <= ANGLE_SAMPLES; i++) {
-                    double angle = subMin + i * step;
-                    double tx = start[0] + targetDist * Math.cos(angle);
-                    double ty = start[1] + targetDist * Math.sin(angle);
-
-                    boolean isValid = isPointValid(tx, ty, live1, live2, start, w, h, r);
-
-                    if (isValid && sectorStart == null) {
-                        sectorStart = prevAngle;
-                    } else if (!isValid && sectorStart != null) {
-                        validSectors.add(new AngleSector(sectorStart, prevAngle));
-                        sectorStart = null;
-                    }
-                    prevAngle = angle;
-                }
-
-                if (sectorStart != null) {
-                    validSectors.add(new AngleSector(sectorStart, subMax));
-                }
-            }
-        }
-
-        if (!validSectors.isEmpty()) {
-            AngleSector sector = validSectors.get(random.nextInt(validSectors.size()));
-            double chosenAngle = sector.start + random.nextDouble() * (sector.end - sector.start);
-            return new double[]{
-                    start[0] + targetDist * Math.cos(chosenAngle),
-                    start[1] + targetDist * Math.sin(chosenAngle)
-            };
-        }
-        return null;
-    }
-
     private double normalizeAngle(double angle) {
         while (angle > Math.PI) angle -= 2 * Math.PI;
         while (angle < -Math.PI) angle += 2 * Math.PI;
         return angle;
-    }
-
-    private List<double[]> splitAngleRange(double min, double max) {
-        List<double[]> result = new ArrayList<>();
-        if (min <= max) {
-            result.add(new double[]{min, max});
-        } else {
-            result.add(new double[]{min, Math.PI});
-            result.add(new double[]{-Math.PI, max});
-        }
-        return result;
-    }
-
-    private boolean isPointValid(double x, double y, double[] l1, double[] l2, double[] start,
-                                 double w, double h, int r) {
-        double margin = r * 2.0;
-        if (x < margin || x > w - margin || y < margin || y > h - margin) return false;
-
-        double minDistSq = MIN_SAFE_DISTANCE * MIN_SAFE_DISTANCE;
-        if ((x - l1[0]) * (x - l1[0]) + (y - l1[1]) * (y - l1[1]) < minDistSq) return false;
-        if ((x - l2[0]) * (x - l2[0]) + (y - l2[1]) * (y - l2[1]) < minDistSq) return false;
-        if ((x - start[0]) * (x - start[0]) + (y - start[1]) * (y - start[1]) < minDistSq) return false;
-
-        return true;
     }
 
     private double[] findRandomSafePoint(double w, double h, int r, List<double[]> activePoints,
@@ -340,16 +315,7 @@ public class VectorTrajectoryGenerator {
         return Math.max(margin, Math.min(size - margin, value));
     }
 
-    private static class AngleSector {
-        final double start;
-        final double end;
-
-        AngleSector(double start, double end) {
-            this.start = start;
-            this.end = end;
-        }
-    }
-
     public void reset() {
+        resetTrajectory();
     }
 }
