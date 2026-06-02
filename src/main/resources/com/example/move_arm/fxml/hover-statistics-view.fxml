@@ -36,6 +36,9 @@
             <Label text="Сид:"/>
             <ComboBox fx:id="seedComboBox" />
 
+            <Label text="Сложность:"/>
+            <ComboBox fx:id="difficultyComboBox" />
+
             <!-- Статистика -->
             <GridPane fx:id="statsGrid" hgap="30" vgap="10" styleClass="dark-panel">
                 <padding>

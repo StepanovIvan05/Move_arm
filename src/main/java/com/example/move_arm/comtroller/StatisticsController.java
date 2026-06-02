@@ -3,6 +3,7 @@ package com.example.move_arm.comtroller;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.model.GameResult;
+import com.example.move_arm.model.TrajectoryDifficulty;
 import com.example.move_arm.service.GameService;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
@@ -24,8 +25,10 @@ public class StatisticsController {
     @FXML private LineChart<Number, Number> scoresChart;
     @FXML private Button backButton;
     @FXML private ComboBox<Integer> seedComboBox;
+    @FXML private ComboBox<TrajectoryDifficulty> difficultyComboBox;
 
     private int seed = 67;
+    private TrajectoryDifficulty difficulty = TrajectoryDifficulty.MEDIUM;
 
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
@@ -50,10 +53,19 @@ public class StatisticsController {
 
         seedComboBox.getItems().setAll(0, 1, 67, 123, 999, 2024);
         seedComboBox.setValue(seed);
+        difficultyComboBox.getItems().setAll(TrajectoryDifficulty.values());
+        difficultyComboBox.setValue(difficulty);
 
         seedComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && newVal != seed) {
                 seed = newVal;
+                updateStatistics();
+            }
+        });
+
+        difficultyComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal != difficulty) {
+                difficulty = newVal;
                 updateStatistics();
             }
         });
@@ -86,11 +98,11 @@ public class StatisticsController {
         }
 
         // вычисляем рекорд, среднее очков, среднее время между кликами
-        List<Integer> ScoresList = gameResultDao.findListScoreByUserGameTypeAndRadiusAndSeed(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed);
-        List<Double> intervals = gameResultDao.findListAvgTimesByUserGameTypeAndRadiusAndSeed(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed);
+        List<Integer> ScoresList = gameResultDao.findListScoreByUserGameTypeAndRadiusSeedDifficulty(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed, difficulty);
+        List<Double> intervals = gameResultDao.findListAvgTimesByUserGameTypeAndRadiusSeedDifficulty(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed, difficulty);
         double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
         double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
-        int bestScore = gameResultDao.findRecordScoreByUserGameTypeAndRadiusAndSeed(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed);
+        int bestScore = gameResultDao.findRecordScoreByUserGameTypeAndRadiusSeedDifficulty(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed, difficulty);
 
         statsGrid.add(new Label("Рекорд:"), 0, 0);
         statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);

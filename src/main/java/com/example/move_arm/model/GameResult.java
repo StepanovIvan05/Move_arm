@@ -8,6 +8,7 @@ public class GameResult {
     private int gameTypeId;
     private int radius;
     private int seed;
+    private TrajectoryDifficulty difficulty = TrajectoryDifficulty.MEDIUM;
     private int score;
     private long durationMs;
     private long timestamp; // epoch ms
@@ -33,6 +34,11 @@ public class GameResult {
 
     public int getSeed() { return seed; }
     public void setSeed(int seed) { this.seed = seed; }
+
+    public TrajectoryDifficulty getDifficulty() { return difficulty; }
+    public void setDifficulty(TrajectoryDifficulty difficulty) {
+        this.difficulty = difficulty == null ? TrajectoryDifficulty.MEDIUM : difficulty;
+    }
 
     public int getScore() { return score; }
     public void setScore(int score) { this.score = score; }

@@ -191,6 +191,7 @@ public class ResultsController {
         addStatRow("Ср. расстояние (px):", String.format("%.2f", last.getAvgDistancePx()), 3);
         addStatRow("Ср. скорость (px/ms):", String.format("%.4f", last.getAvgSpeed()), 4);
         addStatRow("Точность (%):", String.format("%.2f", last.getHitRate()), 5);
+        addStatRow("Difficulty:", last.getDifficulty().name(), 6);
     }
 
     private void addStatRow(String labelText, String valueText, int row) {

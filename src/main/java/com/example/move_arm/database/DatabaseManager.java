@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 
 public class DatabaseManager {
@@ -21,6 +22,7 @@ public class DatabaseManager {
     private DatabaseManager() {
         initDbFile();
         initSchema();
+        migrateSchema();
     }
 
     public static synchronized DatabaseManager getInstance() {
@@ -66,6 +68,7 @@ public class DatabaseManager {
                   game_type_id INTEGER,
                   radius INTEGER,
                   seed INTEGER,
+                  difficulty TEXT NOT NULL DEFAULT 'MEDIUM',
                   score INTEGER,
                   duration_ms INTEGER,
                   timestamp INTEGER,
@@ -137,6 +140,7 @@ public class DatabaseManager {
                     duration_seconds INTEGER NOT NULL,
                     radius INTEGER NOT NULL,
                     seed INTEGER NOT NULL,
+                    difficulty TEXT NOT NULL DEFAULT 'MEDIUM',
                     max_circles_count INTEGER NOT NULL,
                     FOREIGN KEY(user_id) REFERENCES users(id)
                     );
@@ -183,6 +187,30 @@ public class DatabaseManager {
 
         } catch (Exception e) {
             throw new RuntimeException("Не удалось инициализировать схему БД", e);
+        }
+    }
+
+    private void migrateSchema() {
+        try (Connection c = getConnection()) {
+            ensureColumn(c, "game_results", "difficulty", "TEXT NOT NULL DEFAULT 'MEDIUM'");
+            ensureColumn(c, "hover_settings", "difficulty", "TEXT NOT NULL DEFAULT 'MEDIUM'");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to migrate database schema", e);
+        }
+    }
+
+    private void ensureColumn(Connection c, String tableName, String columnName, String columnDefinition) throws Exception {
+        try (Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery("PRAGMA table_info(" + tableName + ")")) {
+            while (rs.next()) {
+                if (columnName.equalsIgnoreCase(rs.getString("name"))) {
+                    return;
+                }
+            }
+        }
+
+        try (Statement s = c.createStatement()) {
+            s.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDefinition);
         }
     }
 

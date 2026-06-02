@@ -1,6 +1,7 @@
 package com.example.move_arm.database;
 
 import com.example.move_arm.model.ClickData;
+import com.example.move_arm.model.TrajectoryDifficulty;
 import javafx.geometry.Point2D;
 
 import java.sql.Connection;
@@ -65,6 +66,30 @@ public class ClickDao {
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, radius);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("clicks");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getMaxClicksForUserRadiusAndDifficulty(int userId, int radius, TrajectoryDifficulty difficulty) {
+        String sql = "SELECT COUNT(*) AS clicks " +
+                "FROM clicks c " +
+                "JOIN game_results g ON c.result_id = g.id " +
+                "WHERE g.user_id = ? AND c.radius = ? AND g.difficulty = ? " +
+                "GROUP BY c.result_id " +
+                "ORDER BY clicks DESC " +
+                "LIMIT 1";
+
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, radius);
+            ps.setString(3, (difficulty == null ? TrajectoryDifficulty.MEDIUM : difficulty).name());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt("clicks");

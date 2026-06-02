@@ -78,9 +78,9 @@ public class MoreResultsController {
         }
 
         int currentRadius = clicks.getFirst().getRadius();
-        int bestScore = clickDao.getMaxClicksForUserAndRadius(last.getUserId(), currentRadius);
+        int bestScore = clickDao.getMaxClicksForUserRadiusAndDifficulty(last.getUserId(), currentRadius, last.getDifficulty());
 
-        summaryTable.add(new Label("Рекорд для этого радиуса:"), 0, 4);
+        summaryTable.add(new Label("Рекорд для этого радиуса и сложности:"), 0, 4);
         summaryTable.add(new Label(String.valueOf(bestScore)), 1, 4);
 
         summaryTable.add(new Label("Средний интервал кликов (мс):"), 0, 0);

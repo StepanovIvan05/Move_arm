@@ -63,6 +63,7 @@ public class HoverGamePresenter {
 
         settings = settingsService.getHoverSettings();
         levelGenerator.initialize(settings.getSeed());
+        trajectoryGenerator.setDifficulty(settings.getDifficulty());
 
         resetGameState();
 
@@ -179,7 +180,7 @@ public class HoverGamePresenter {
         if (timer != null) timer.stop();
 
         try {
-            gameService.addGameClicks(settings.getRadius(), settings.getSeed(), new ArrayList<>(clickData));
+            gameService.addGameClicks(settings.getRadius(), settings.getSeed(), settings.getDifficulty(), new ArrayList<>(clickData));
         } catch (Exception e) {
             AppLogger.error("Ошибка сохранения результата", e);
         }

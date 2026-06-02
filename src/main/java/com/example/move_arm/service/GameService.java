@@ -8,6 +8,7 @@ import com.example.move_arm.model.GameType;
 import com.example.move_arm.model.HoldAttempt;
 import com.example.move_arm.model.Statistics;
 import com.example.move_arm.model.TripletRecord;
+import com.example.move_arm.model.TrajectoryDifficulty;
 import com.example.move_arm.model.User;
 
 public class GameService {
@@ -46,7 +47,7 @@ public class GameService {
         return gameTypeService.getCurrentGameTypeString();
     }
 
-    public int addGameClicks(int radius, int seed, List<ClickData> clicks) {
+    public int addGameClicks(int radius, int seed, TrajectoryDifficulty difficulty, List<ClickData> clicks) {
 
         cacheService.storeClicks(clicks);
 
@@ -55,6 +56,7 @@ public class GameService {
                 gameTypeService.getCurrentGameTypeId(),
                 radius,
                 seed,
+                difficulty,
                 clicks
         );
     }

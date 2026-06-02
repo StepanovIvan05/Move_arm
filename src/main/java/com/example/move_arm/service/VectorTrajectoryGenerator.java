@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.example.move_arm.model.TrajectoryDifficulty;
+
 public class VectorTrajectoryGenerator {
 
     private static VectorTrajectoryGenerator instance;
     private final Random random = new Random();
 
-    public enum Difficulty { EASY, MEDIUM, HARD }
-    private Difficulty currentDifficulty = Difficulty.EASY;
+    private TrajectoryDifficulty currentDifficulty = TrajectoryDifficulty.MEDIUM;
 
     private static final double MIN_SAFE_DISTANCE = 100.0;
     private static final double HARD_LIVE_TARGET_DIST = 130.0;
@@ -34,7 +35,7 @@ public class VectorTrajectoryGenerator {
         return instance;
     }
 
-    public void setDifficulty(Difficulty difficulty) {
+    public void setDifficulty(TrajectoryDifficulty difficulty) {
         this.currentDifficulty = difficulty;
     }
 
@@ -46,7 +47,7 @@ public class VectorTrajectoryGenerator {
             double[] previousHit,
             double[] lastHit) {
 
-        if (currentDifficulty == Difficulty.HARD) {
+        if (currentDifficulty == TrajectoryDifficulty.HARD) {
             return generateHardCoreRandomPoint(
                     width,
                     height,
@@ -75,7 +76,7 @@ public class VectorTrajectoryGenerator {
                     lastHit[0] - previousHit[0]
             );
 
-            double idealDistance = (currentDifficulty == Difficulty.EASY) ? EASY_DISTANCE : MEDIUM_DISTANCE;
+            double idealDistance = (currentDifficulty == TrajectoryDifficulty.EASY) ? EASY_DISTANCE : MEDIUM_DISTANCE;
 
             resultPoint = runMultipliersScan(lastHit, live1, live2, width, height, radius, idealDistance, baseAngle);
 
@@ -84,7 +85,7 @@ public class VectorTrajectoryGenerator {
             }
 
             if (resultPoint == null) {
-                double maxLimit = (currentDifficulty == Difficulty.EASY) ? 220.0 : 350.0;
+                double maxLimit = (currentDifficulty == TrajectoryDifficulty.EASY) ? 220.0 : 350.0;
                 resultPoint = findRandomSafePoint(width, height, radius, liveTargets, lastHit, MIN_SAFE_DISTANCE, maxLimit);
             }
         }
@@ -101,7 +102,7 @@ public class VectorTrajectoryGenerator {
             double h,
             int r,
             List<double[]> liveTargets,
-            double[] currentHit,
+            double[] lastHit,
             double[] previousHit) {
         double margin = r * 2.5;
 
@@ -109,8 +110,8 @@ public class VectorTrajectoryGenerator {
             double x = randomCoordinate(margin, w);
             double y = randomCoordinate(margin, h);
 
-            if (currentHit != null) {
-                double distToCursor = Math.hypot(x - currentHit[0], y - currentHit[1]);
+            if (lastHit != null) {
+                double distToCursor = Math.hypot(x - lastHit[0], y - lastHit[1]);
                 if (distToCursor < ABSOLUTE_HARD_MIN_DIST) continue;
             }
 
@@ -121,10 +122,10 @@ public class VectorTrajectoryGenerator {
                 if (Math.hypot(x - l1[0], y - l1[1]) < HARD_LIVE_TARGET_DIST ||
                         Math.hypot(x - l2[0], y - l2[1]) < HARD_LIVE_TARGET_DIST) continue;
 
-                if (currentHit != null) {
-                    if (previousHit != null && isPointNearLine(x, y, previousHit, currentHit, HARD_LINE_SAFE_MARGIN)) continue;
-                    if (isPointNearLine(x, y, currentHit, l1, HARD_LINE_SAFE_MARGIN)) continue;
-                    if (isPointNearLine(x, y, currentHit, l2, HARD_LINE_SAFE_MARGIN)) continue;
+                if (lastHit != null) {
+                    if (previousHit != null && isPointNearLine(x, y, previousHit, lastHit, HARD_LINE_SAFE_MARGIN)) continue;
+                    if (isPointNearLine(x, y, lastHit, l1, HARD_LINE_SAFE_MARGIN)) continue;
+                    if (isPointNearLine(x, y, lastHit, l2, HARD_LINE_SAFE_MARGIN)) continue;
                 }
             }
             return new double[]{x, y};
@@ -134,8 +135,8 @@ public class VectorTrajectoryGenerator {
             double x = randomCoordinate(margin, w);
             double y = randomCoordinate(margin, h);
 
-            if (currentHit != null) {
-                double distToCursor = Math.hypot(x - currentHit[0], y - currentHit[1]);
+            if (lastHit != null) {
+                double distToCursor = Math.hypot(x - lastHit[0], y - lastHit[1]);
                 if (distToCursor < ABSOLUTE_HARD_MIN_DIST) continue;
             }
 
@@ -144,17 +145,17 @@ public class VectorTrajectoryGenerator {
             }
         }
 
-        if (currentHit != null) {
+        if (lastHit != null) {
             double randomAngle = random.nextDouble() * 2 * Math.PI;
-            double x = currentHit[0] + ABSOLUTE_HARD_MIN_DIST * Math.cos(randomAngle);
-            double y = currentHit[1] + ABSOLUTE_HARD_MIN_DIST * Math.sin(randomAngle);
+            double x = lastHit[0] + ABSOLUTE_HARD_MIN_DIST * Math.cos(randomAngle);
+            double y = lastHit[1] + ABSOLUTE_HARD_MIN_DIST * Math.sin(randomAngle);
 
             x = clampToField(x, margin, w);
             y = clampToField(y, margin, h);
             return new double[]{x, y};
         }
 
-        double[] point = findRandomSafePoint(w, h, r, liveTargets, currentHit, ABSOLUTE_HARD_MIN_DIST, w);
+        double[] point = findRandomSafePoint(w, h, r, liveTargets, lastHit, ABSOLUTE_HARD_MIN_DIST, w);
         return point != null ? point : fallbackPoint(w, h, r);
     }
 
@@ -172,19 +173,19 @@ public class VectorTrajectoryGenerator {
         return (numerator / denominator) < margin;
     }
 
-    private double[] runMultipliersScan(double[] currentHit, double[] live1, double[] live2,
+    private double[] runMultipliersScan(double[] lastHit, double[] live1, double[] live2,
                                         double w, double h, int r, double idealDistance, double baseAngle) {
         for (double multiplier : DISTANCE_MULTIPLIERS) {
-            double[] point = findPointAnalytical(currentHit, live1, live2, w, h, r, idealDistance * multiplier, baseAngle, false);
+            double[] point = findPointAnalytical(lastHit, live1, live2, w, h, r, idealDistance * multiplier, baseAngle, false);
             if (point != null) return point;
         }
         return null;
     }
 
-    private double[] runWideAngleScan(double[] currentHit, double[] live1, double[] live2,
+    private double[] runWideAngleScan(double[] lastHit, double[] live1, double[] live2,
                                       double w, double h, int r, double idealDistance, double baseAngle) {
         for (double multiplier : DISTANCE_MULTIPLIERS) {
-            double[] point = findPointAnalytical(currentHit, live1, live2, w, h, r, idealDistance * multiplier, baseAngle, true);
+            double[] point = findPointAnalytical(lastHit, live1, live2, w, h, r, idealDistance * multiplier, baseAngle, true);
             if (point != null) return point;
         }
         return null;
@@ -196,10 +197,10 @@ public class VectorTrajectoryGenerator {
 
         List<double[]> angleRanges = new ArrayList<>();
         if (forceWideAngles) {
-            double dev = Math.toRadians(currentDifficulty == Difficulty.EASY ? 90.0 : 130.0);
+            double dev = Math.toRadians(currentDifficulty == TrajectoryDifficulty.EASY ? 90.0 : 130.0);
             angleRanges.add(new double[]{baseAngle - dev, baseAngle + dev});
         } else {
-            double dev = Math.toRadians(currentDifficulty == Difficulty.EASY ? EASY_MAX_ANGLE_DEV : MEDIUM_MAX_ANGLE_DEV);
+            double dev = Math.toRadians(currentDifficulty == TrajectoryDifficulty.EASY ? EASY_MAX_ANGLE_DEV : MEDIUM_MAX_ANGLE_DEV);
             angleRanges.add(new double[]{baseAngle - dev, baseAngle + dev});
         }
 

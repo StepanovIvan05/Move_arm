@@ -35,6 +35,11 @@
             <Label text="Сид:"/>
             <ComboBox fx:id="seedComboBox"/>
 
+            <VBox alignment="CENTER" spacing="8">
+                <Label text="Сложность" styleClass="subtitle-label"/>
+                <ComboBox fx:id="difficultyComboBox" prefWidth="220"/>
+            </VBox>
+
             <Button text="Сохранить и выйти" onAction="#handleSaveAndExit"/>
         </VBox>
 

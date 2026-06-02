@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import com.example.move_arm.model.TrajectoryDifficulty;
 import com.example.move_arm.model.settings.HoverGameSettings;
 
 public class HoverSettingsDao {
@@ -26,6 +27,7 @@ public class HoverSettingsDao {
                 s.setDurationSeconds(rs.getInt("duration_seconds"));
                 s.setRadius(rs.getInt("radius"));
                 s.setSeed(rs.getInt("seed"));
+                s.setDifficulty(parseDifficulty(rs.getString("difficulty")));
                 s.setMaxCirclesCount(rs.getInt("max_circles_count"));
 
                 return s;
@@ -46,13 +48,15 @@ public class HoverSettingsDao {
                 duration_seconds,
                 radius,
                 seed,
+                difficulty,
                 max_circles_count
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id) DO UPDATE SET
                 duration_seconds = excluded.duration_seconds,
                 radius = excluded.radius,
                 seed = excluded.seed,
+                difficulty = excluded.difficulty,
                 max_circles_count = excluded.max_circles_count
         """;
 
@@ -63,7 +67,8 @@ public class HoverSettingsDao {
             ps.setInt(2, settings.getDurationSeconds());
             ps.setInt(3, settings.getRadius());
             ps.setInt(4, settings.getSeed());
-            ps.setInt(5, settings.getMaxCirclesCount());
+            ps.setString(5, settings.getDifficulty().name());
+            ps.setInt(6, settings.getMaxCirclesCount());
 
             ps.executeUpdate();
 
@@ -85,6 +90,14 @@ public class HoverSettingsDao {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private TrajectoryDifficulty parseDifficulty(String value) {
+        try {
+            return value == null ? TrajectoryDifficulty.MEDIUM : TrajectoryDifficulty.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return TrajectoryDifficulty.MEDIUM;
         }
     }
 }
