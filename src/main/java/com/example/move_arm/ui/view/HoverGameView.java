@@ -30,6 +30,8 @@ public class HoverGameView implements GameView {
     private Runnable onRestartHandler;
     private Runnable onViewReadyHandler;
 
+    private final List<Circle> targets = new ArrayList<>();
+
     @FXML
     public void initialize() {
         // Создаём лейблы
@@ -79,6 +81,7 @@ public class HoverGameView implements GameView {
 
     @Override
     public void clearField() {
+        targets.clear();
         gameRoot.getChildren().clear();
     }
 
@@ -97,6 +100,7 @@ public class HoverGameView implements GameView {
             AnimationService.playDestructionAnimation(gameRoot, circle, null);
             } catch (Exception ignored) {}
 
+            targets.remove(circle);
             gameRoot.getChildren().remove(circle);
             if (onTargetHitHandler != null) {
                 TargetHitEvent hitEvent = new TargetHitEvent(
@@ -112,12 +116,14 @@ public class HoverGameView implements GameView {
             // Анимация разрушения можно вызвать здесь или через Presenter
         });
 
+        targets.add(circle);
         gameRoot.getChildren().add(circle);
     }
 
     @Override
     public void removeTarget(Object targetId) {
         if (targetId instanceof Circle circle) {
+            targets.remove(circle);
             gameRoot.getChildren().remove(circle);
         }
     }
@@ -180,10 +186,15 @@ public class HoverGameView implements GameView {
     public List<double[]> getActiveTargetPositions() {
         List<double[]> positions = new ArrayList<>();
 
-        for (var node : gameRoot.getChildren()) {
-            if (node instanceof Circle circle) {
-                positions.add(new double[]{circle.getCenterX(), circle.getCenterY()});
-            }
+        for (Circle circle : targets) {
+
+            positions.add(
+                new double[]{
+                    circle.getCenterX(),
+                    circle.getCenterY()
+                }
+            );
+
         }
 
         return positions;

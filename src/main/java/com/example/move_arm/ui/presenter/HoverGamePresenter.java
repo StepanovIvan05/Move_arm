@@ -120,6 +120,10 @@ public class HoverGamePresenter {
             activePoints.add(lastCircle);
         }
 
+        System.out.println(
+            "active points = " + activePoints.size()
+        );
+
         // Получаем новые координаты
         double[] coords = trajectoryGenerator.nextPoint(paneWidth, paneHeight, settings.getRadius(), activePoints);
 
@@ -131,6 +135,7 @@ public class HoverGamePresenter {
         view.addTarget(x, y, settings.getRadius(), color);
         activeCircles++;
     }
+
     private void onTargetHit(TargetHitEvent event) {
         if (!gameActive) return;
 
