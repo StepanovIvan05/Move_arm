@@ -39,8 +39,8 @@ public class HoverGamePresenter {
     private boolean gameActive = false;
 
     // Важная логика избегания спавна рядом с последней сбитой целью
-    private final double[] lastCircle = new double[2];
-    private boolean hasLastCircle = false;
+    private double[] lastHit = null;
+    private double[] previousHit = null;
 
     private final Random random = new Random();
 
@@ -79,7 +79,8 @@ public class HoverGamePresenter {
         gameActive = true;
         score = 0;
         activeCircles = 0;
-        hasLastCircle = false;
+        lastHit = null;
+        previousHit = null;
         remainingTime = settings.getDurationSeconds();
         clickData.clear();
         if (timer != null) {
@@ -112,20 +113,14 @@ public class HoverGamePresenter {
             return;
         }
 
-        // Правильно собираем активные точки
-        List<double[]> activePoints = view.getActiveTargetPositions();
-
-        // Добавляем последнюю сбитую цель (важная логика!)
-        if (hasLastCircle) {
-            activePoints.add(lastCircle);
-        }
-
-        System.out.println(
-            "active points = " + activePoints.size()
+        double[] coords = trajectoryGenerator.nextPoint(
+            paneWidth,
+            paneHeight,
+            settings.getRadius(),
+            view.getActiveTargetPositions(),
+            previousHit,
+            lastHit
         );
-
-        // Получаем новые координаты
-        double[] coords = trajectoryGenerator.nextPoint(paneWidth, paneHeight, settings.getRadius(), activePoints);
 
         double x = coords[0];
         double y = coords[1];
@@ -148,9 +143,11 @@ public class HoverGamePresenter {
 
         // === КРИТИЧНО ВАЖНО ===
         // Сохраняем координаты только что уничтоженной цели
-        lastCircle[0] = event.targetX();
-        lastCircle[1] = event.targetY();
-        hasLastCircle = true;
+        previousHit = lastHit;
+        lastHit = new double[]{
+            event.targetX(),
+            event.targetY()
+        };
 
         score++;
         activeCircles--;
