@@ -7,7 +7,9 @@ import java.util.Random;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
+import com.example.move_arm.service.GeneratorFactory;
 import com.example.move_arm.service.LevelGeneratorService;
+import com.example.move_arm.service.PointGenerator;
 import com.example.move_arm.service.SettingsService;
 import com.example.move_arm.service.VectorTrajectoryGenerator;
 import com.example.move_arm.ui.SceneManager;
@@ -25,9 +27,8 @@ public class HoverGamePresenter {
     private final GameView view;
     private final GameService gameService;
     private final SettingsService settingsService;
-    private final LevelGeneratorService levelGenerator;
     private final SceneManager sceneManager;
-    private final VectorTrajectoryGenerator trajectoryGenerator;
+    private PointGenerator trajectoryGenerator;
 
     private HoverGameSettings settings;
     private final List<ClickData> clickData = new ArrayList<>();
@@ -50,8 +51,6 @@ public class HoverGamePresenter {
         this.sceneManager = sceneManager;
         this.gameService = GameService.getInstance();
         this.settingsService = SettingsService.getInstance();
-        this.levelGenerator = LevelGeneratorService.getInstance();
-        this.trajectoryGenerator = VectorTrajectoryGenerator.getInstance();
 
         view.setOnTargetHit(this::onTargetHit);
         view.setOnToMenu(this::goToMenu);
@@ -63,8 +62,17 @@ public class HoverGamePresenter {
         AppLogger.info("HoverGamePresenter: startNewGame()");
 
         settings = settingsService.getHoverSettings();
-        levelGenerator.initialize(settings.getSeed());
-        trajectoryGenerator.setDifficulty(settings.getDifficulty());
+        
+        trajectoryGenerator = GeneratorFactory.createGenerator(settings.getGeneratorType());
+        
+        if (trajectoryGenerator instanceof VectorTrajectoryGenerator) {
+            ((VectorTrajectoryGenerator) trajectoryGenerator).setDifficulty(settings.getDifficulty());
+        }
+        
+        if (trajectoryGenerator instanceof LevelGeneratorService) {
+            ((LevelGeneratorService) trajectoryGenerator).initialize(settings.getSeed());
+        }
+        
         trajectoryGenerator.reset();
 
         resetGameState();

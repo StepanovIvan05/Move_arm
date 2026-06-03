@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import com.example.move_arm.model.GeneratorType;
 import com.example.move_arm.model.TrajectoryDifficulty;
 import com.example.move_arm.model.settings.HoverGameSettings;
 
@@ -29,6 +30,7 @@ public class HoverSettingsDao {
                 s.setSeed(rs.getInt("seed"));
                 s.setDifficulty(parseDifficulty(rs.getString("difficulty")));
                 s.setMaxCirclesCount(rs.getInt("max_circles_count"));
+                s.setGeneratorType(parseGeneratorType(rs.getString("generator_type")));
 
                 return s;
             }
@@ -49,15 +51,17 @@ public class HoverSettingsDao {
                 radius,
                 seed,
                 difficulty,
-                max_circles_count
+                max_circles_count,
+                generator_type
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id) DO UPDATE SET
                 duration_seconds = excluded.duration_seconds,
                 radius = excluded.radius,
                 seed = excluded.seed,
                 difficulty = excluded.difficulty,
-                max_circles_count = excluded.max_circles_count
+                max_circles_count = excluded.max_circles_count,
+                generator_type = excluded.generator_type
         """;
 
         try (Connection c = db.getConnection();
@@ -69,6 +73,7 @@ public class HoverSettingsDao {
             ps.setInt(4, settings.getSeed());
             ps.setString(5, settings.getDifficulty().name());
             ps.setInt(6, settings.getMaxCirclesCount());
+            ps.setString(7, settings.getGeneratorType().name());
 
             ps.executeUpdate();
 
@@ -98,6 +103,14 @@ public class HoverSettingsDao {
             return value == null ? TrajectoryDifficulty.MEDIUM : TrajectoryDifficulty.valueOf(value);
         } catch (IllegalArgumentException e) {
             return TrajectoryDifficulty.MEDIUM;
+        }
+    }
+
+    private GeneratorType parseGeneratorType(String value) {
+        try {
+            return value == null ? GeneratorType.ADAPTIVE : GeneratorType.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return GeneratorType.ADAPTIVE;
         }
     }
 }

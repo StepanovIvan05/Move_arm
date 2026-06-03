@@ -40,6 +40,11 @@
                 <ComboBox fx:id="difficultyComboBox" prefWidth="220"/>
             </VBox>
 
+            <VBox alignment="CENTER" spacing="8">
+                <Label text="Тип генератора" styleClass="subtitle-label"/>
+                <ComboBox fx:id="generatorTypeComboBox" prefWidth="220"/>
+            </VBox>
+
             <Button text="Сохранить и выйти" onAction="#handleSaveAndExit"/>
         </VBox>
 
