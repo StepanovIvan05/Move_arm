@@ -164,4 +164,9 @@ public class WeightedGridGenerator2 implements PointGenerator {
                 radius + random.nextDouble() * (height - 2 * radius)
         };
     }
+
+    @Override
+    public void reset() {
+        // WeightedGridGenerator2 не требует специального сброса состояния
+    }
 }

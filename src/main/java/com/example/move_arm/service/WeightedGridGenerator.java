@@ -27,7 +27,8 @@ public class WeightedGridGenerator implements PointGenerator {
         reset();
     }
 
-    private void reset() {
+    @Override
+    public void reset() {
         previousActivePoints.clear();
         spawnCounter = 0;
         for (Region r : regions) {

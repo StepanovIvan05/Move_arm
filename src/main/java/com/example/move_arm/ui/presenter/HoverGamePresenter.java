@@ -38,9 +38,10 @@ public class HoverGamePresenter {
     private int remainingTime;
     private boolean gameActive = false;
 
-    // Важная логика избегания спавна рядом с последней сбитой целью
-    private double[] lastHit = null;
-    private double[] previousHit = null;
+    // Presenter как единственный источник правды для активных целей
+    private final List<double[]> activeTargets = new ArrayList<>();
+    // Последняя сбитая цель (для генератора траектории)
+    private double[] lastHitTarget = null;
 
     private final Random random = new Random();
 
@@ -64,6 +65,7 @@ public class HoverGamePresenter {
         settings = settingsService.getHoverSettings();
         levelGenerator.initialize(settings.getSeed());
         trajectoryGenerator.setDifficulty(settings.getDifficulty());
+        trajectoryGenerator.reset();
 
         resetGameState();
 
@@ -80,8 +82,8 @@ public class HoverGamePresenter {
         gameActive = true;
         score = 0;
         activeCircles = 0;
-        lastHit = null;
-        previousHit = null;
+        activeTargets.clear();
+        lastHitTarget = null;
         remainingTime = settings.getDurationSeconds();
         clickData.clear();
         if (timer != null) {
@@ -114,13 +116,17 @@ public class HoverGamePresenter {
             return;
         }
 
+        // Подготавливаем список для генератора: активные цели + последняя сбитая в конце
+        List<double[]> pointsForGenerator = new ArrayList<>(activeTargets);
+        if (lastHitTarget != null) {
+            pointsForGenerator.add(lastHitTarget.clone());
+        }
+
         double[] coords = trajectoryGenerator.nextPoint(
             paneWidth,
             paneHeight,
             settings.getRadius(),
-            view.getActiveTargetPositions(),
-            previousHit,
-            lastHit
+            pointsForGenerator
         );
 
         double x = coords[0];
@@ -129,6 +135,7 @@ public class HoverGamePresenter {
         Color color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256), 0.85);
 
         view.addTarget(x, y, settings.getRadius(), color);
+        activeTargets.add(new double[]{x, y});
         activeCircles++;
     }
 
@@ -142,20 +149,21 @@ public class HoverGamePresenter {
                 event.targetX(), event.targetY(),
                 event.radius()));
 
-        // === КРИТИЧНО ВАЖНО ===
-        // Сохраняем координаты только что уничтоженной цели
-        previousHit = lastHit;
-        lastHit = new double[]{
+        // Обновляем последнюю сбитую цель
+        lastHitTarget = new double[]{
             event.targetX(),
             event.targetY()
         };
 
+        // Удаляем сбитую цель из активных
+        activeTargets.removeIf(target -> 
+            Math.abs(target[0] - event.targetX()) < 0.1 && 
+            Math.abs(target[1] - event.targetY()) < 0.1
+        );
+
         score++;
         activeCircles--;
         view.setScore(score);
-
-        // Анимация уничтожения — вызываем из View
-        // (пока оставляем вызов в HoverGameView.addTarget)
 
         if (activeCircles < settings.getMaxCirclesCount()) {
             spawnRandomTarget();
