@@ -8,10 +8,8 @@ import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.GeneratorFactory;
-import com.example.move_arm.service.LevelGeneratorService;
 import com.example.move_arm.service.PointGenerator;
 import com.example.move_arm.service.SettingsService;
-import com.example.move_arm.service.VectorTrajectoryGenerator;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.ui.view.GameView;
 import com.example.move_arm.ui.view.TargetHitEvent;
@@ -62,18 +60,7 @@ public class HoverGamePresenter {
         AppLogger.info("HoverGamePresenter: startNewGame()");
 
         settings = settingsService.getHoverSettings();
-        
-        trajectoryGenerator = GeneratorFactory.createGenerator(settings.getGeneratorType());
-        
-        if (trajectoryGenerator instanceof VectorTrajectoryGenerator) {
-            ((VectorTrajectoryGenerator) trajectoryGenerator).setDifficulty(settings.getDifficulty());
-        }
-        
-        if (trajectoryGenerator instanceof LevelGeneratorService) {
-            ((LevelGeneratorService) trajectoryGenerator).initialize(settings.getSeed());
-        }
-        
-        trajectoryGenerator.reset();
+        trajectoryGenerator = GeneratorFactory.createGenerator(settings);
 
         resetGameState();
 
