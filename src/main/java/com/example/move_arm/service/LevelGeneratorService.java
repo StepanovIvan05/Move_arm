@@ -65,4 +65,9 @@ public class LevelGeneratorService implements PointGenerator {
         }
         return true;
     }
+
+    @Override
+    public void reset() {
+        // LevelGeneratorService не требует специального сброса состояния
+    }
 }

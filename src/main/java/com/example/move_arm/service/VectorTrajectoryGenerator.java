@@ -6,7 +6,7 @@ import java.util.Random;
 
 import com.example.move_arm.model.TrajectoryDifficulty;
 
-public class VectorTrajectoryGenerator {
+public class VectorTrajectoryGenerator implements PointGenerator {
 
     private static VectorTrajectoryGenerator instance;
     private final Random random = new Random();
@@ -16,6 +16,9 @@ public class VectorTrajectoryGenerator {
     // Состояние виртуальной траектории для EASY и MEDIUM
     private double[] virtualHead = null;
     private double currentAngle = 0.0;
+    
+    // Кэш предыдущей цели для генерирования траектории
+    private double[] previousHitCache = null;
 
     // Глобальные константы безопасности и ограничений
     private static final double MIN_SAFE_DISTANCE = 100.0;
@@ -50,22 +53,38 @@ public class VectorTrajectoryGenerator {
      * Сброс виртуальной траектории. 
      * ОБЯЗАТЕЛЬНО вызывать в HoverGamePresenter перед стартом новой игры.
      */
-    public void resetTrajectory() {
+    @Override
+    public void reset() {
         this.virtualHead = null;
         this.currentAngle = random.nextDouble() * 2 * Math.PI;
+        this.previousHitCache = null;
     }
 
-    public double[] nextPoint(
-            double width,
-            double height,
-            int radius,
-            List<double[]> liveTargets,
-            double[] previousHit,
-            double[] lastHit) {
+    /**
+     * Генерирует следующую точку на основе списка активных целей.
+     * Последний элемент списка интерпретируется как последняя сбитая цель.
+     * Остальные элементы — это текущие живые цели на экране.
+     * 
+     * @param width ширина игрового поля
+     * @param height высота игрового поля
+     * @param radius радиус цели
+     * @param activePointsWithLastHit список активных целей + последняя сбитая цель в конце
+     * @return координаты [x, y] новой цели
+     */
+    @Override
+    public double[] nextPoint(double width, double height, int radius, List<double[]> activePointsWithLastHit) {
+        // Разделяем список: все кроме последнего — живые цели, последний — сбитая цель
+        List<double[]> liveTargets = new ArrayList<>();
+        double[] lastHit = null;
+        
+        if (activePointsWithLastHit != null && !activePointsWithLastHit.isEmpty()) {
+            liveTargets = new ArrayList<>(activePointsWithLastHit.subList(0, activePointsWithLastHit.size() - 1));
+            lastHit = activePointsWithLastHit.get(activePointsWithLastHit.size() - 1);
+        }
 
         // --- РЕЖИМ HARD: БЕЗКОМПРОМИССНЫЙ ХАОС ---
         if (currentDifficulty == TrajectoryDifficulty.HARD) {
-            return generateHardCoreRandomPoint(width, height, radius, liveTargets, lastHit, previousHit);
+            return generateHardCoreRandomPoint(width, height, radius, liveTargets, lastHit, previousHitCache);
         }
 
         // --- РЕЖИМЫ EASY И MEDIUM: УМНАЯ ЗМЕЙКА С ЗАЩИТОЙ ОТ НАЛОЖЕНИЙ И УГЛОВЫХ ТУПИКОВ ---
@@ -169,6 +188,9 @@ public class VectorTrajectoryGenerator {
         // Фиксируем новое положение виртуальной головы
         virtualHead[0] = nextX;
         virtualHead[1] = nextY;
+        
+        // Обновляем кэш предыдущей цели (текущая сгенерированная точка станет следующей "предыдущей")
+        previousHitCache = lastHit;
 
         return virtualHead.clone();
     }
@@ -313,9 +335,5 @@ public class VectorTrajectoryGenerator {
             return Math.max(0, size / 2.0);
         }
         return Math.max(margin, Math.min(size - margin, value));
-    }
-
-    public void reset() {
-        resetTrajectory();
     }
 }
