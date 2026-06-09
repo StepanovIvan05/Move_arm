@@ -166,23 +166,125 @@
 }
 
 /* =================================================
+   TITLED PANE
+   ================================================= */
+
+.titled-pane {
+    -fx-background-color: #1f1f1f;
+    -fx-border-color: #3a3a3a;
+    -fx-text-fill: #d8d8d8;
+}
+
+.titled-pane .title {
+    -fx-background-color: #262626;
+    -fx-text-fill: #d8d8d8;
+    -fx-padding: 10;
+}
+
+.titled-pane:expanded .title {
+    -fx-background-color: #1f1f1f;
+}
+
+.titled-pane .content {
+    -fx-background-color: #1f1f1f;
+    -fx-padding: 10;
+}
+
+/* =================================================
+   SCROLL PANE
+   ================================================= */
+
+.scroll-pane {
+    -fx-background-color: #1f1f1f;
+    -fx-border-color: #3a3a3a;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: #1f1f1f;
+}
+
+.scroll-bar {
+    -fx-background-color: #1f1f1f;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #3a3a3a;
+    -fx-background-radius: 5;
+}
+
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #4a4a4a;
+}
+
+/* =================================================
    CHARTS (оставлены спокойными)
    ================================================= */
 
 .chart {
-    -fx-background-color: #2b2b2b;
+    -fx-background-color: #232323;
+    -fx-padding: 15;
 }
 
 .chart-plot-background {
-    -fx-background-color: #2b2b2b;
+    -fx-background-color: #1f1f1f;
 }
 
 .chart-vertical-grid-lines,
 .chart-horizontal-grid-lines {
-    -fx-stroke: #444;
+    -fx-stroke: #3a3a3a;
+}
+
+.chart-legend {
+    -fx-background-color: #232323;
+    -fx-text-fill: #d8d8d8;
+}
+
+.axis {
+    -fx-border-color: #3a3a3a;
+    -fx-padding: 15;
+    -fx-min-width: 80;
 }
 
 .axis .tick-label,
 .axis .axis-label {
-    -fx-text-fill: #cccccc;
+    -fx-text-fill: #b0b0b0;
+    -fx-font-size: 12px;
+    -fx-padding: 8;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+}
+
+/* =================================================
+   SCROLL BAR
+   ================================================= */
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #3a3a3a;
+    -fx-background-radius: 5;
+}
+
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #4a4a4a;
+}
+
+/* =================================================
+   CHART TITLES
+   ================================================= */
+
+.chart-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+}
+
+/* =================================================
+   DARK STYLED COMPONENTS
+   ================================================= */
+
+.dark-titled-pane {
+    -fx-background-color: #1f1f1f;
+}
+
+.dark-scroll-pane {
+    -fx-background-color: #1f1f1f;
 }

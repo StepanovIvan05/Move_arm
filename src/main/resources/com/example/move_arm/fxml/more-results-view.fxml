@@ -10,15 +10,19 @@
             fx:controller="com.example.move_arm.comtroller.MoreResultsController"
             stylesheets="@../css/dark-glow.css">
 
-    <VBox spacing="20" alignment="CENTER"
-          AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="10"
-          AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10">
+    <VBox spacing="20"
+          alignment="TOP_CENTER"
+          AnchorPane.topAnchor="10"
+          AnchorPane.bottomAnchor="10"
+          AnchorPane.leftAnchor="10"
+          AnchorPane.rightAnchor="10">
 
         <Label text="Средние значения" styleClass="subtitle-label"/>
         <Label fx:id="modeLabel" text="" styleClass="info-label"/>
 
         <GridPane fx:id="summaryTable"
-                  hgap="30" vgap="10"
+                  hgap="30"
+                  vgap="10"
                   styleClass="dark-panel">
             <padding>
                 <Insets top="20" bottom="20" left="20" right="20"/>
@@ -29,36 +33,79 @@
 
         <Label text="Графики" styleClass="subtitle-label"/>
 
-        <ScrollPane fitToWidth="true" fitToHeight="true" prefHeight="700">
-            <VBox spacing="30" alignment="CENTER">
+        <ScrollPane fitToWidth="true"
+                    fitToHeight="false"
+                    VBox.vgrow="ALWAYS"
+                    styleClass="dark-scroll-pane">
+
+            <VBox spacing="30"
+                  alignment="CENTER"
+                  fillWidth="true">
+
                 <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
+                    <Insets top="20"
+                            right="30"
+                            bottom="20"
+                            left="40"/>
                 </padding>
 
-                <LineChart fx:id="clickIntervalsChart" prefWidth="900" prefHeight="200">
-                    <xAxis><NumberAxis label="Номер клика"/></xAxis>
-                    <yAxis><NumberAxis label="Интервал (мс)"/></yAxis>
+                <LineChart fx:id="clickIntervalsChart"
+                           minHeight="450"
+                           prefHeight="450"
+                           maxWidth="Infinity"
+                           title="Интервал между кликами">
+                    <xAxis>
+                        <NumberAxis label="Номер клика"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Интервал (мс)" side="LEFT"/>
+                    </yAxis>
                 </LineChart>
 
-                <LineChart fx:id="cursorDistanceChart" prefWidth="900" prefHeight="200">
-                    <xAxis><NumberAxis label="Номер клика"/></xAxis>
-                    <yAxis><NumberAxis label="Расстояние от центра (px)"/></yAxis>
+                <LineChart fx:id="cursorDistanceChart"
+                           minHeight="450"
+                           prefHeight="450"
+                           maxWidth="Infinity"
+                           title="Расстояние от центра">
+                    <xAxis>
+                        <NumberAxis label="Номер клика"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Расстояние (px)" side="LEFT"/>
+                    </yAxis>
                 </LineChart>
 
-                <LineChart fx:id="movementSpeedChart" prefWidth="900" prefHeight="200">
-                    <xAxis><NumberAxis label="Номер клика"/></xAxis>
-                    <yAxis><NumberAxis label="Скорость (px/мс)"/></yAxis>
+                <LineChart fx:id="movementSpeedChart"
+                           minHeight="450"
+                           prefHeight="450"
+                           maxWidth="Infinity"
+                           title="Скорость движения">
+                    <xAxis>
+                        <NumberAxis label="Номер клика"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Скорость (px/мс)" side="LEFT"/>
+                    </yAxis>
                 </LineChart>
 
-                <LineChart fx:id="normalizedDeviationChart" prefWidth="900" prefHeight="200">
-                    <xAxis><NumberAxis label="Номер клика"/></xAxis>
-                    <yAxis><NumberAxis label="Нормализованное отклонение"/></yAxis>
+                <LineChart fx:id="normalizedDeviationChart"
+                           minHeight="450"
+                           prefHeight="450"
+                           maxWidth="Infinity"
+                           title="Нормализованное отклонение">
+                    <xAxis>
+                        <NumberAxis label="Номер клика"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Отклонение" side="LEFT"/>
+                    </yAxis>
                 </LineChart>
 
             </VBox>
         </ScrollPane>
 
-        <Button text="В меню" onAction="#handleToMenuButton"/>
+        <Button text="В меню"
+                onAction="#handleToMenuButton"/>
 
     </VBox>
 

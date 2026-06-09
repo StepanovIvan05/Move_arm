@@ -71,7 +71,8 @@
             <!-- Users list (secondary) -->
             <TitledPane text="Другие пользователи"
                         expanded="false"
-                        maxWidth="360">
+                        maxWidth="360"
+                        styleClass="dark-titled-pane">
                 <VBox spacing="8">
                     <padding>
                         <Insets top="8" right="8" bottom="8" left="8"/>
