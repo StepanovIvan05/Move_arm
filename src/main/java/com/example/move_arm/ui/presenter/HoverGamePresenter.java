@@ -7,9 +7,9 @@ import java.util.Random;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
-import com.example.move_arm.service.LevelGeneratorService;
+import com.example.move_arm.service.GeneratorFactory;
+import com.example.move_arm.service.PointGenerator;
 import com.example.move_arm.service.SettingsService;
-import com.example.move_arm.service.VectorTrajectoryGenerator;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.ui.view.GameView;
 import com.example.move_arm.ui.view.TargetHitEvent;
@@ -25,9 +25,8 @@ public class HoverGamePresenter {
     private final GameView view;
     private final GameService gameService;
     private final SettingsService settingsService;
-    private final LevelGeneratorService levelGenerator;
     private final SceneManager sceneManager;
-    private final VectorTrajectoryGenerator trajectoryGenerator;
+    private PointGenerator trajectoryGenerator;
 
     private HoverGameSettings settings;
     private final List<ClickData> clickData = new ArrayList<>();
@@ -50,8 +49,6 @@ public class HoverGamePresenter {
         this.sceneManager = sceneManager;
         this.gameService = GameService.getInstance();
         this.settingsService = SettingsService.getInstance();
-        this.levelGenerator = LevelGeneratorService.getInstance();
-        this.trajectoryGenerator = VectorTrajectoryGenerator.getInstance();
 
         view.setOnTargetHit(this::onTargetHit);
         view.setOnToMenu(this::goToMenu);
@@ -63,9 +60,7 @@ public class HoverGamePresenter {
         AppLogger.info("HoverGamePresenter: startNewGame()");
 
         settings = settingsService.getHoverSettings();
-        levelGenerator.initialize(settings.getSeed());
-        trajectoryGenerator.setDifficulty(settings.getDifficulty());
-        trajectoryGenerator.reset();
+        trajectoryGenerator = GeneratorFactory.createGenerator(settings);
 
         resetGameState();
 
@@ -188,7 +183,13 @@ public class HoverGamePresenter {
         if (timer != null) timer.stop();
 
         try {
-            gameService.addGameClicks(settings.getRadius(), settings.getSeed(), settings.getDifficulty(), new ArrayList<>(clickData));
+            gameService.addGameClicks(
+                    settings.getRadius(),
+                    settings.getGeneratorType(),
+                    settings.getSeed(),
+                    settings.getDifficulty(),
+                    new ArrayList<>(clickData)
+            );
         } catch (Exception e) {
             AppLogger.error("Ошибка сохранения результата", e);
         }

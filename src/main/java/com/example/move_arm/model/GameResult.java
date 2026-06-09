@@ -7,6 +7,7 @@ public class GameResult {
     private int userId;
     private int gameTypeId;
     private int radius;
+    private GeneratorType generatorType = GeneratorType.ADAPTIVE;
     private int seed;
     private TrajectoryDifficulty difficulty = TrajectoryDifficulty.MEDIUM;
     private int score;
@@ -31,6 +32,11 @@ public class GameResult {
 
     public int getRadius() { return radius; }
     public void setRadius(int radius) { this.radius = radius; }
+
+    public GeneratorType getGeneratorType() { return generatorType; }
+    public void setGeneratorType(GeneratorType generatorType) {
+        this.generatorType = generatorType == null ? GeneratorType.ADAPTIVE : generatorType;
+    }
 
     public int getSeed() { return seed; }
     public void setSeed(int seed) { this.seed = seed; }

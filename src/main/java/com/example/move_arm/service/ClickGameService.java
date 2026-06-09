@@ -7,6 +7,7 @@ import com.example.move_arm.database.ClickDao;
 import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.GameResult;
+import com.example.move_arm.model.GeneratorType;
 import com.example.move_arm.model.Statistics;
 import com.example.move_arm.model.TrajectoryDifficulty;
 
@@ -16,6 +17,10 @@ public class ClickGameService {
     private final ClickDao clickDao = new ClickDao();
 
     public int saveClicks(int userId, int gameTypeId, int radius, int seed, TrajectoryDifficulty difficulty, List<ClickData> clicks) {
+        return saveClicks(userId, gameTypeId, radius, GeneratorType.ADAPTIVE, seed, difficulty, clicks);
+    }
+
+    public int saveClicks(int userId, int gameTypeId, int radius, GeneratorType generatorType, int seed, TrajectoryDifficulty difficulty, List<ClickData> clicks) {
 
         if (clicks == null) clicks = Collections.emptyList();
 
@@ -24,6 +29,7 @@ public class ClickGameService {
         result.setUserId(userId);
         result.setGameTypeId(gameTypeId);
         result.setRadius(radius);
+        result.setGeneratorType(generatorType);
         result.setSeed(seed);
         result.setDifficulty(difficulty);
         result.setScore(clicks.size());

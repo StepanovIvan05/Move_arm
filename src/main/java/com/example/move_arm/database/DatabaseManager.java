@@ -67,6 +67,7 @@ public class DatabaseManager {
                   user_id INTEGER,
                   game_type_id INTEGER,
                   radius INTEGER,
+                  generator_type TEXT NOT NULL DEFAULT 'ADAPTIVE',
                   seed INTEGER,
                   difficulty TEXT NOT NULL DEFAULT 'MEDIUM',
                   score INTEGER,
@@ -193,7 +194,9 @@ public class DatabaseManager {
     private void migrateSchema() {
         try (Connection c = getConnection()) {
             ensureColumn(c, "game_results", "difficulty", "TEXT NOT NULL DEFAULT 'MEDIUM'");
+            ensureColumn(c, "game_results", "generator_type", "TEXT NOT NULL DEFAULT 'ADAPTIVE'");
             ensureColumn(c, "hover_settings", "difficulty", "TEXT NOT NULL DEFAULT 'MEDIUM'");
+            ensureColumn(c, "hover_settings", "generator_type", "TEXT NOT NULL DEFAULT 'ADAPTIVE'");
         } catch (Exception e) {
             throw new RuntimeException("Failed to migrate database schema", e);
         }

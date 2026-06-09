@@ -201,7 +201,13 @@ public class GameController {
 
         // сохраняем результат — GameService сохраняет в БД и хранит lastGameClicks
         try {
-            int savedId = gameService.addGameClicks(settings.getRadius(), settings.getSeed(), settings.getDifficulty(), new ArrayList<>(clickData));
+            int savedId = gameService.addGameClicks(
+                    settings.getRadius(),
+                    settings.getGeneratorType(),
+                    settings.getSeed(),
+                    settings.getDifficulty(),
+                    new ArrayList<>(clickData)
+            );
             AppLogger.info("GameController: Результат сохранён в БД (id=" + savedId + ")");
         } catch (Exception e) {
             AppLogger.error("GameController: Ошибка сохранения результата", e);

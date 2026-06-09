@@ -3,6 +3,7 @@ package com.example.move_arm.comtroller;
 import com.example.move_arm.util.AppLogger;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.database.ClickDao;
+import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.database.HoldAttemptDao;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.GameResult;
@@ -31,6 +32,7 @@ public class MoreResultsController {
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
     private final ClickDao clickDao = new ClickDao();
+    private final GameResultDao gameResultDao = new GameResultDao();
     private final HoldAttemptDao holdAttemptDao = new HoldAttemptDao();
 
     public void setSceneManager(SceneManager manager) { this.sceneManager = manager; }
@@ -78,9 +80,16 @@ public class MoreResultsController {
         }
 
         int currentRadius = clicks.getFirst().getRadius();
-        int bestScore = clickDao.getMaxClicksForUserRadiusAndDifficulty(last.getUserId(), currentRadius, last.getDifficulty());
+        int bestScore = gameResultDao.findRecordScoreByGeneratorSettings(
+                last.getUserId(),
+                last.getGameTypeId(),
+                currentRadius,
+                last.getGeneratorType(),
+                last.getSeed(),
+                last.getDifficulty()
+        );
 
-        summaryTable.add(new Label("Рекорд для этого радиуса и сложности:"), 0, 4);
+        summaryTable.add(new Label("Рекорд для этих настроек генератора:"), 0, 4);
         summaryTable.add(new Label(String.valueOf(bestScore)), 1, 4);
 
         summaryTable.add(new Label("Средний интервал кликов (мс):"), 0, 0);
@@ -259,4 +268,3 @@ public class MoreResultsController {
         }
     }
 }
-

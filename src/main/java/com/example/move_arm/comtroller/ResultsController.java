@@ -6,6 +6,7 @@ import com.example.move_arm.database.ClickDao;
 import com.example.move_arm.database.HoldAttemptDao;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.GameResult;
+import com.example.move_arm.model.GeneratorType;
 import com.example.move_arm.model.HoldAttempt;
 import com.example.move_arm.service.GameService; // Не забудь импорт
 import com.example.move_arm.ui.SceneManager;
@@ -191,7 +192,18 @@ public class ResultsController {
         addStatRow("Ср. расстояние (px):", String.format("%.2f", last.getAvgDistancePx()), 3);
         addStatRow("Ср. скорость (px/ms):", String.format("%.4f", last.getAvgSpeed()), 4);
         addStatRow("Точность (%):", String.format("%.2f", last.getHitRate()), 5);
-        addStatRow("Difficulty:", last.getDifficulty().name(), 6);
+        addStatRow("Генератор:", last.getGeneratorType().name(), 6);
+        addStatRow(getGeneratorOptionLabel(last), getGeneratorOptionValue(last), 7);
+    }
+
+    private String getGeneratorOptionLabel(GameResult result) {
+        return result.getGeneratorType() == GeneratorType.RANDOM ? "Seed:" : "Difficulty:";
+    }
+
+    private String getGeneratorOptionValue(GameResult result) {
+        return result.getGeneratorType() == GeneratorType.RANDOM
+                ? String.valueOf(result.getSeed())
+                : result.getDifficulty().name();
     }
 
     private void addStatRow(String labelText, String valueText, int row) {
