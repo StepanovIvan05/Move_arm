@@ -183,7 +183,13 @@ public class HoverGamePresenter {
         if (timer != null) timer.stop();
 
         try {
-            gameService.addGameClicks(settings.getRadius(), settings.getSeed(), settings.getDifficulty(), new ArrayList<>(clickData));
+            gameService.addGameClicks(
+                    settings.getRadius(),
+                    settings.getGeneratorType(),
+                    settings.getSeed(),
+                    settings.getDifficulty(),
+                    new ArrayList<>(clickData)
+            );
         } catch (Exception e) {
             AppLogger.error("Ошибка сохранения результата", e);
         }

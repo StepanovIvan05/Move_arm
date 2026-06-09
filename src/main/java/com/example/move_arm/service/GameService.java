@@ -5,6 +5,7 @@ import java.util.List;
 import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.GameResult;
 import com.example.move_arm.model.GameType;
+import com.example.move_arm.model.GeneratorType;
 import com.example.move_arm.model.HoldAttempt;
 import com.example.move_arm.model.Statistics;
 import com.example.move_arm.model.TripletRecord;
@@ -48,6 +49,10 @@ public class GameService {
     }
 
     public int addGameClicks(int radius, int seed, TrajectoryDifficulty difficulty, List<ClickData> clicks) {
+        return addGameClicks(radius, GeneratorType.ADAPTIVE, seed, difficulty, clicks);
+    }
+
+    public int addGameClicks(int radius, GeneratorType generatorType, int seed, TrajectoryDifficulty difficulty, List<ClickData> clicks) {
 
         cacheService.storeClicks(clicks);
 
@@ -55,6 +60,7 @@ public class GameService {
                 userService.getCurrentUser().getId(),
                 gameTypeService.getCurrentGameTypeId(),
                 radius,
+                generatorType,
                 seed,
                 difficulty,
                 clicks

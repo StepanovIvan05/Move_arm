@@ -132,11 +132,11 @@ public class StatisticsController {
         }
 
         // вычисляем рекорд, среднее очков, среднее время между кликами
-        List<Integer> ScoresList = gameResultDao.findListScoreByUserGameTypeAndRadiusSeedDifficulty(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed, difficulty);
-        List<Double> intervals = gameResultDao.findListAvgTimesByUserGameTypeAndRadiusSeedDifficulty(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed, difficulty);
+        List<Integer> ScoresList = gameResultDao.findListScoresByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+        List<Double> intervals = gameResultDao.findListAvgTimesByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
         double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
         double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
-        int bestScore = gameResultDao.findRecordScoreByUserGameTypeAndRadiusSeedDifficulty(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, seed, difficulty);
+        int bestScore = gameResultDao.findRecordScoreByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
 
         statsGrid.add(new Label("Рекорд:"), 0, 0);
         statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
