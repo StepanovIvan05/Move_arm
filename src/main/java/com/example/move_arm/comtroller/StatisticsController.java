@@ -3,8 +3,11 @@ package com.example.move_arm.comtroller;
 import com.example.move_arm.ui.SceneManager;
 import com.example.move_arm.database.GameResultDao;
 import com.example.move_arm.model.GameResult;
+import com.example.move_arm.model.GeneratorType;
 import com.example.move_arm.model.TrajectoryDifficulty;
+import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
+import com.example.move_arm.service.SettingsService;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -14,6 +17,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import java.util.List;
 
@@ -24,15 +28,21 @@ public class StatisticsController {
     @FXML private GridPane statsGrid;
     @FXML private LineChart<Number, Number> scoresChart;
     @FXML private Button backButton;
+    @FXML private ComboBox<GeneratorType> generatorTypeComboBox;
     @FXML private ComboBox<Integer> seedComboBox;
     @FXML private ComboBox<TrajectoryDifficulty> difficultyComboBox;
+    @FXML private VBox seedContainer;
+    @FXML private VBox adaptiveContainer;
 
     private int seed = 67;
     private TrajectoryDifficulty difficulty = TrajectoryDifficulty.MEDIUM;
+    private GeneratorType generatorType = GeneratorType.ADAPTIVE;
 
     private SceneManager sceneManager;
     private final GameService gameService = GameService.getInstance();
+    private final SettingsService settingsService = SettingsService.getInstance();
     private final GameResultDao gameResultDao = new GameResultDao();
+    private final HoverGeneratorOptionsBinder generatorOptionsBinder = new HoverGeneratorOptionsBinder();
     private int radius = 50;
 
     public void setSceneManager(SceneManager sm) {
@@ -41,6 +51,14 @@ public class StatisticsController {
 
     @FXML
     public void initialize() {
+        HoverGameSettings hoverSettings = settingsService.getHoverSettings();
+        if (hoverSettings != null) {
+            seed = hoverSettings.getSeed();
+            difficulty = hoverSettings.getDifficulty();
+            generatorType = hoverSettings.getGeneratorType();
+            radius = hoverSettings.getRadius();
+        }
+
         radiusLabel.setText(String.valueOf(radius));
 
         radiusSlider.setMin(20);
@@ -49,12 +67,28 @@ public class StatisticsController {
         radiusSlider.setMajorTickUnit(10);  // шаг для рисования делений
         radiusSlider.setMinorTickCount(0);  // без промежуточных делений
         radiusSlider.setSnapToTicks(true);  // "привязка" к делениям
-
+        radiusSlider.setValue(radius);
 
         seedComboBox.getItems().setAll(0, 1, 67, 123, 999, 2024);
         seedComboBox.setValue(seed);
         difficultyComboBox.getItems().setAll(TrajectoryDifficulty.values());
         difficultyComboBox.setValue(difficulty);
+
+        generatorOptionsBinder
+                .register(GeneratorType.RANDOM, seedContainer)
+                .register(GeneratorType.ADAPTIVE, adaptiveContainer);
+        generatorType = generatorOptionsBinder.normalizeType(generatorType);
+        generatorTypeComboBox.getItems().setAll(generatorOptionsBinder.getSupportedTypes());
+        generatorTypeComboBox.setValue(generatorType);
+        generatorOptionsBinder.showOptionsFor(generatorType);
+
+        generatorTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal != generatorType) {
+                generatorType = newVal;
+                generatorOptionsBinder.showOptionsFor(newVal);
+                updateStatistics();
+            }
+        });
 
         seedComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && newVal != seed) {

@@ -33,11 +33,23 @@
                 <Label fx:id="radiusLabel" text="50"/>
             </HBox>
 
-            <Label text="Сид:"/>
-            <ComboBox fx:id="seedComboBox" />
+            <VBox spacing="8" alignment="CENTER">
+                <Label text="Тип генератора:"/>
+                <ComboBox fx:id="generatorTypeComboBox" prefWidth="220"/>
+            </VBox>
 
-            <Label text="Сложность:"/>
-            <ComboBox fx:id="difficultyComboBox" />
+            <StackPane fx:id="generatorOptionsContainer" alignment="CENTER">
+                <VBox fx:id="seedContainer" spacing="8" alignment="CENTER">
+                    <Label text="Сид:"/>
+                    <ComboBox fx:id="seedComboBox" prefWidth="220"/>
+                </VBox>
+
+                <VBox fx:id="adaptiveContainer" spacing="8" alignment="CENTER"
+                      visible="false" managed="false">
+                    <Label text="Сложность:"/>
+                    <ComboBox fx:id="difficultyComboBox" prefWidth="220"/>
+                </VBox>
+            </StackPane>
 
             <!-- Статистика -->
             <GridPane fx:id="statsGrid" hgap="30" vgap="10" styleClass="dark-panel">

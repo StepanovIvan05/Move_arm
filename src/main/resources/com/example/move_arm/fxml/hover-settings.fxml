@@ -18,6 +18,7 @@
         <VBox alignment="CENTER" spacing="20" prefWidth="320" styleClass="dark-panel">
             <Label text="Настройки наведения" styleClass="title-label"/>
 
+            <!-- Радиус -->
             <VBox alignment="CENTER" spacing="8">
                 <Label text="Размер цели" styleClass="subtitle-label"/>
                 <Slider fx:id="radiusSlider" min="20" max="100"
@@ -26,24 +27,34 @@
                 <Label fx:id="radiusValueLabel"/>
             </VBox>
 
+            <!-- Анимация -->
             <VBox alignment="CENTER" spacing="8">
                 <Label text="Анимация" styleClass="subtitle-label"/>
                 <ComboBox fx:id="animationTypeComboBox" prefWidth="220"/>
                 <Button text="▶ Просмотреть" onAction="#handlePlayAnimation"/>
             </VBox>
 
-            <Label text="Сид:"/>
-            <ComboBox fx:id="seedComboBox"/>
-
-            <VBox alignment="CENTER" spacing="8">
-                <Label text="Сложность" styleClass="subtitle-label"/>
-                <ComboBox fx:id="difficultyComboBox" prefWidth="220"/>
-            </VBox>
-
+            <!-- Тип генератора -->
             <VBox alignment="CENTER" spacing="8">
                 <Label text="Тип генератора" styleClass="subtitle-label"/>
                 <ComboBox fx:id="generatorTypeComboBox" prefWidth="220"/>
             </VBox>
+
+            <!-- 🔥 ДИНАМИЧЕСКИЙ КОНТЕЙНЕР -->
+            <StackPane fx:id="generatorOptionsContainer" alignment="CENTER">
+                <!-- RANDOM: только сид -->
+                <VBox fx:id="seedContainer" alignment="CENTER" spacing="8">
+                    <Label text="Сид генерации" styleClass="subtitle-label"/>
+                    <ComboBox fx:id="seedComboBox" prefWidth="220"/>
+                </VBox>
+
+                <!-- ADAPTIVE: только сложность -->
+                <VBox fx:id="adaptiveContainer" alignment="CENTER" spacing="8"
+                      visible="false" managed="false">
+                    <Label text="Сложность траектории" styleClass="subtitle-label"/>
+                    <ComboBox fx:id="difficultyComboBox" prefWidth="220"/>
+                </VBox>
+            </StackPane>
 
             <Button text="Сохранить и выйти" onAction="#handleSaveAndExit"/>
         </VBox>

@@ -7,10 +7,19 @@ import com.example.move_arm.model.settings.HoverGameSettings;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 public class HoverSettingsController extends BaseSettingsController {
+
     @FXML private ComboBox<TrajectoryDifficulty> difficultyComboBox;
     @FXML private ComboBox<GeneratorType> generatorTypeComboBox;
+
+    @FXML private StackPane generatorOptionsContainer;
+    @FXML private VBox seedContainer;
+    @FXML private VBox adaptiveContainer;
+
+    private final HoverGeneratorOptionsBinder generatorOptionsBinder = new HoverGeneratorOptionsBinder();
 
     @Override
     protected BaseSettings getGameSettings() {
@@ -20,16 +29,39 @@ public class HoverSettingsController extends BaseSettingsController {
     @Override
     protected void initializeSpecific() {
         HoverGameSettings hoverSettings = (HoverGameSettings) settings;
+
+        generatorOptionsBinder
+                .register(GeneratorType.RANDOM, seedContainer)
+                .register(GeneratorType.ADAPTIVE, adaptiveContainer);
+
+        // Тип генератора
+        generatorTypeComboBox.getItems().setAll(generatorOptionsBinder.getSupportedTypes());
+        generatorTypeComboBox.setValue(generatorOptionsBinder.normalizeType(hoverSettings.getGeneratorType()));
+
+        // Сложность
         difficultyComboBox.getItems().setAll(TrajectoryDifficulty.values());
         difficultyComboBox.setValue(hoverSettings.getDifficulty());
-        
-        generatorTypeComboBox.getItems().setAll(GeneratorType.values());
-        generatorTypeComboBox.setValue(hoverSettings.getGeneratorType());
+
+        // Установка начального состояния контейнера
+        generatorOptionsBinder.showOptionsFor(generatorTypeComboBox.getValue());
+
+        // Слушатель переключения
+        generatorTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            generatorOptionsBinder.showOptionsFor(newVal);
+        });
     }
 
     @Override
     protected void saveSpecificSettings() {
-        ((HoverGameSettings) settings).setDifficulty(difficultyComboBox.getValue());
-        ((HoverGameSettings) settings).setGeneratorType(generatorTypeComboBox.getValue());
+        HoverGameSettings hoverSettings = (HoverGameSettings) settings;
+        GeneratorType genType = generatorTypeComboBox.getValue();
+
+        hoverSettings.setGeneratorType(genType);
+
+        if (generatorOptionsBinder.usesDifficulty(genType)) {
+            hoverSettings.setDifficulty(difficultyComboBox.getValue());
+        } else if (generatorOptionsBinder.usesSeed(genType)) {
+            hoverSettings.setSeed(seedComboBox.getValue());
+        }
     }
 }
