@@ -41,7 +41,7 @@
                            styleClass="caption-label"/>
 
                     <Button fx:id="hoverButton"
-                            text="Начать"
+                            text="Выбрать"
                             prefWidth="140"
                             styleClass="accent-button"/>
                 </VBox>
@@ -61,7 +61,7 @@
                            styleClass="caption-label"/>
 
                     <Button fx:id="holdButton"
-                            text="Начать"
+                            text="Выбрать"
                             prefWidth="140"
                             styleClass="accent-button"/>
                 </VBox>
@@ -73,7 +73,7 @@
                     <Label text="Neural" styleClass="subtitle-label"/>
                     <Label text="Тренируйте нейросеть своей игрой. Адаптивная сложность."
                            wrapText="true" maxWidth="220" styleClass="caption-label"/>
-                    <Button fx:id="neuralButton" text="Тренировать"
+                    <Button fx:id="neuralButton" text="Выбрать"
                             prefWidth="140" styleClass="accent-button"/>
                 </VBox>
 

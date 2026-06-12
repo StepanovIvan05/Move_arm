@@ -58,7 +58,10 @@ public class ResultsController {
 
         // ПРОВЕРКА РЕЖИМА: 
         // Здесь мы решаем, какой метод отрисовки вызвать
-        if ("hold".equals(gameService.getCurrentGameTypeString())) {
+        if ("neural".equalsIgnoreCase(gameService.getCurrentGameTypeString())) {
+            showNeuralResults(last);
+        }
+        else if ("hold".equals(gameService.getCurrentGameTypeString())) {
             System.out.println("нашло ===============");
             showHoldResults(last);
         } else {
@@ -87,6 +90,39 @@ public class ResultsController {
         scoreChart.getData().add(scoreSeries);
         setupAxes("Время (сек)", "Очки");
         fillStatsTable(last);
+    }
+
+    // --- МЕТОД ДЛЯ NEURAL РЕЖИМА ---
+    private void showNeuralResults(GameResult last) {
+        useAutoLegend();
+        
+        // Для Neural режима График: прогрессия попаданий по времени
+        XYChart.Series<Number, Number> scoreSeries = new XYChart.Series<>();
+        scoreSeries.setName("Накопленные попадания");
+        
+        int totalScore = last.getScore();
+        long durationMs = last.getDurationMs();
+        
+        // Добавляем точки с реальным прогрессом
+        if (totalScore > 0) {
+            double timePerPoint = (double) durationMs / totalScore;
+            for (int i = 0; i <= totalScore; i++) {
+                double timeSec = (i * timePerPoint) / 1000.0;
+                scoreSeries.getData().add(new XYChart.Data<>(timeSec, i));
+            }
+        }
+        
+        scoreChart.getData().add(scoreSeries);
+        setupAxes("Время (сек)", "Накопленные попадания");
+        
+        // Заполняем таблицу статистики
+        double avgIntervalMs = durationMs > 0 ? (double) durationMs / totalScore : 0;
+        double frequency = durationMs > 0 ? (totalScore * 1000.0) / durationMs : 0;
+        
+        addStatRow("Всего попаданий:", String.valueOf(totalScore), 0);
+        addStatRow("Длительность (сек):", String.format("%.1f", durationMs / 1000.0), 1);
+        addStatRow("Средний интервал (мс):", String.format("%.2f", avgIntervalMs), 2);
+        addStatRow("Частота (попаданий/сек):", String.format("%.2f", frequency), 3);
     }
 
     private void showHoldResults(GameResult last) {

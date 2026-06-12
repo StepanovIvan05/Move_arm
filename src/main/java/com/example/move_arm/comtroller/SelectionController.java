@@ -43,7 +43,7 @@ public class SelectionController {
 
         neuralButton.setOnAction(e -> {
             gameService.setCurrentGameType(gameTypeDao.findByName("neural").get());
-            sceneManager.startNeuralGame();  // сразу в игру, без меню настроек
+            sceneManager.showMenu();
         });
 
         logoutButton.setOnAction(e -> {

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.example.move_arm.model.TripletRecord;
-import com.example.move_arm.model.settings.HoverGameSettings;
+import com.example.move_arm.model.settings.NeuralGameSettings;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.NeuralTripletGenerator;
 import com.example.move_arm.service.SettingsService;
@@ -31,9 +31,9 @@ public class NeuralGamePresenter {
     private final SceneManager sceneManager;
     private final NeuralTripletGenerator generator;
 
-    private final int radius = 40; // фиксированный радиус мишени
+    private int radius;
 
-    private HoverGameSettings settings;
+    private NeuralGameSettings settings;
     private Timeline timer;
 
     private long gameStartTimeNs;
@@ -63,14 +63,24 @@ public class NeuralGamePresenter {
     }
 
     public void startNewGame() {
-        AppLogger.info("NeuralGamePresenter: startNewGame() — запуск Neural режима");
-        settings = settingsService.getHoverSettings();
+        AppLogger.info("NeuralGamePresenter: startNewGame()");
+
+        settings = settingsService.getNeuralSettings();
+        radius = settings.getRadius();
         resetGameState();
+
         view.start();
+
         view.setScore(0);
         view.setTime(settings.getDurationSeconds());
         view.setUserName(gameService.getCurrentUser().getUsername());
+
         gameStartTimeNs = System.nanoTime();
+
+        AppLogger.info("width=" + view.getWidth() + ", height=" + view.getHeight() + ", radius=" + radius);
+
+        spawnInitialTriplet();
+        startTimer();
     }
 
     private void resetGameState() {
@@ -92,9 +102,8 @@ public class NeuralGamePresenter {
     }
 
     private void onViewReady() {
-        AppLogger.info("NeuralGamePresenter: View готов — спавним начальную тройку");
-        spawnInitialTriplet();
-        startTimer();
+        AppLogger.info("NeuralGamePresenter: View готов");
+        startNewGame();
     }
 
     private void spawnInitialTriplet() {
@@ -107,7 +116,7 @@ public class NeuralGamePresenter {
 
     private void spawnCell(int cell) {
         double[] xy = GridUtils.cellToXy(cell, view.getWidth(), view.getHeight());
-        view.addTargetWithCell(xy[0], xy[1], this.radius, randomColor(), cell);
+        view.addTargetWithCell(xy[0], xy[1], radius, randomColor(), cell);
     }
 
     private void spawnThirdTarget(int activeCell1, int activeCell2) {
@@ -166,7 +175,7 @@ public class NeuralGamePresenter {
         rec.hitTargetIndex = hitTargetIndex; 
         rec.hitTtkNs = event.lifetimeNs();
         rec.spawnNs = System.nanoTime(); 
-        rec.radius = this.radius;
+        rec.radius = radius;
         rec.screenWidth = (int) view.getWidth();
         rec.screenHeight = (int) view.getHeight();
         rec.centroidRow = geom.centroidRow;
@@ -231,17 +240,14 @@ public class NeuralGamePresenter {
     }
 
     private void restartGame() {
-        AppLogger.info("NeuralGamePresenter: === РЕСТАРТ NEURAL ИГРЫ ===");
+        AppLogger.info("=== РЕСТАРТ NEURAL ИГРЫ ===");
+
         gameActive = false;
+
         if (timer != null) {
             timer.stop();
             timer = null;
         }
-        view.clearField();
-        gameBuffer.clear();
-        tripletCounter = 0;
-        lastHitCell = -1;
-        generator.reset();
 
         startNewGame();
     }

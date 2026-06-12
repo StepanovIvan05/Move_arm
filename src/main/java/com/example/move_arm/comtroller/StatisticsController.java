@@ -59,6 +59,18 @@ public class StatisticsController {
             radius = hoverSettings.getRadius();
         }
 
+        // Для neural режима — отключаем элементы управления
+        String currentGameType = gameService.getCurrentGameTypeString();
+        if ("neural".equalsIgnoreCase(currentGameType)) {
+            radiusSlider.setDisable(true);
+            generatorTypeComboBox.setDisable(true);
+            seedComboBox.setDisable(true);
+            difficultyComboBox.setDisable(true);
+            statsGrid.add(new Label("Neural режим не имеет настроек для статистики"), 0, 0);
+            scoresChart.setVisible(false);
+            return;
+        }
+
         radiusLabel.setText(String.valueOf(radius));
 
         radiusSlider.setMin(20);
@@ -125,40 +137,78 @@ public class StatisticsController {
         statsGrid.getChildren().clear();
         scoresChart.getData().clear();
 
+        String currentGameType = gameService.getCurrentGameTypeString();
+
         List<GameResult> results = gameService.getResultsForCurrentUser();
         if (results == null || results.isEmpty()) {
             statsGrid.add(new Label("Нет данных"), 0, 0);
             return;
         }
 
-        // вычисляем рекорд, среднее очков, среднее время между кликами
-        List<Integer> ScoresList = gameResultDao.findListScoresByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
-        List<Double> intervals = gameResultDao.findListAvgTimesByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
-        double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
-        int bestScore = gameResultDao.findRecordScoreByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+        if ("neural".equalsIgnoreCase(currentGameType)) {
+            // Neural режим: статистика по радиусу
+            List<GameResult> neuralResults = results.stream()
+                .filter(r -> r.getRadius() == radius)
+                .toList();
 
-        statsGrid.add(new Label("Рекорд:"), 0, 0);
-        statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
+            if (neuralResults.isEmpty()) {
+                statsGrid.add(new Label("Нет данных для этого радиуса"), 0, 0);
+                return;
+            }
 
-        statsGrid.add(new Label("Среднее количество очков:"), 0, 1);
-        statsGrid.add(new Label(String.format("%.2f", avgScore)), 1, 1);
+            int bestScore = neuralResults.stream().mapToInt(GameResult::getScore).max().orElse(0);
+            double avgScore = neuralResults.stream().mapToDouble(GameResult::getScore).average().orElse(0.0);
+            double avgFrequency = neuralResults.stream()
+                .mapToDouble(r -> r.getDurationMs() > 0 ? (r.getScore() * 1000.0) / r.getDurationMs() : 0)
+                .average()
+                .orElse(0.0);
 
-        statsGrid.add(new Label("Среднее время между кликами (мс):"), 0, 2);
-        statsGrid.add(new Label(String.format("%.2f", avgIntervalMs)), 1, 2);
+            statsGrid.add(new Label("Рекорд:"), 0, 0);
+            statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
+
+            statsGrid.add(new Label("Среднее попаданий:"), 0, 1);
+            statsGrid.add(new Label(String.format("%.1f", avgScore)), 1, 1);
+
+            statsGrid.add(new Label("Средняя частота (попаданий/сек):"), 0, 2);
+            statsGrid.add(new Label(String.format("%.2f", avgFrequency)), 1, 2);
+
+            XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            series.setName("Попадания по играм");
+            int i = 1;
+            for (GameResult r : neuralResults) {
+                series.getData().add(new XYChart.Data<>(i++, r.getScore()));
+            }
+            scoresChart.getData().add(series);
+
+        } else {
+            // Hover/Hold режимы: существующая логика
+            List<Integer> ScoresList = gameResultDao.findListScoresByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+            List<Double> intervals = gameResultDao.findListAvgTimesByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+            double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
+            int bestScore = gameResultDao.findRecordScoreByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+
+            statsGrid.add(new Label("Рекорд:"), 0, 0);
+            statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
+
+            statsGrid.add(new Label("Среднее количество очков:"), 0, 1);
+            statsGrid.add(new Label(String.format("%.2f", avgScore)), 1, 1);
+
+            statsGrid.add(new Label("Среднее время между кликами (мс):"), 0, 2);
+            statsGrid.add(new Label(String.format("%.2f", avgIntervalMs)), 1, 2);
+
+            XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            series.setName("Очки по играм");
+            int i = 1;
+            for (int r : ScoresList) {
+                series.getData().add(new XYChart.Data<>(i++, r));
+            }
+            scoresChart.getData().add(series);
+        }
 
         NumberAxis xAxis = (NumberAxis) scoresChart.getXAxis();
         NumberAxis yAxis = (NumberAxis) scoresChart.getYAxis();
         xAxis.setAutoRanging(true);
         yAxis.setAutoRanging(true);
-
-
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        series.setName("Очки по играм");
-        int i = 1;
-        for (int r : ScoresList) {
-            series.getData().add(new XYChart.Data<>(i++, r));
-        }
-        scoresChart.getData().add(series);
     }
 }

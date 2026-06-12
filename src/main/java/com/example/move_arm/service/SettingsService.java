@@ -3,10 +3,12 @@ package com.example.move_arm.service;
 import com.example.move_arm.database.GlobalSettingsDao;
 import com.example.move_arm.database.HoldSettingsDao;
 import com.example.move_arm.database.HoverSettingsDao;
+import com.example.move_arm.database.NeuralSettingsDao;
 import com.example.move_arm.model.AnimationType;
 import com.example.move_arm.model.settings.GlobalSettings;
 import com.example.move_arm.model.settings.HoldGameSettings;
 import com.example.move_arm.model.settings.HoverGameSettings;
+import com.example.move_arm.model.settings.NeuralGameSettings;
 
 public class SettingsService {
 
@@ -15,10 +17,12 @@ public class SettingsService {
     private final GlobalSettingsDao globalDao = new GlobalSettingsDao();
     private final HoverSettingsDao hoverDao = new HoverSettingsDao();
     private final HoldSettingsDao holdDao = new HoldSettingsDao();
+    private final NeuralSettingsDao neuralDao = new NeuralSettingsDao();
 
     private GlobalSettings globalSettings;
     private HoverGameSettings hoverSettings;
     private HoldGameSettings holdSettings;
+    private NeuralGameSettings neuralSettings;
 
     private long getCurrentUserId() {
         return UserService.getInstance().getCurrentUser().getId();
@@ -43,6 +47,7 @@ public class SettingsService {
         globalSettings = globalDao.load(userId);
         hoverSettings = hoverDao.load(userId);
         holdSettings = holdDao.load(userId);
+        neuralSettings = neuralDao.load(userId);
     }
 
     public void ensureDefaultsSaved(long userId) {
@@ -57,6 +62,10 @@ public class SettingsService {
         if (!holdDao.exists(userId)) {
             holdDao.save(userId, new HoldGameSettings());
         }
+
+        if (!neuralDao.exists(userId)) {
+            neuralDao.save(userId, new NeuralGameSettings());
+        }
     }
 
     // ===== GET =====
@@ -67,6 +76,10 @@ public class SettingsService {
 
     public HoldGameSettings getHoldSettings() {
         return holdSettings;
+    }
+
+    public NeuralGameSettings getNeuralSettings() {
+        return neuralSettings;
     }
 
     public AnimationType getAnimationType() {
@@ -83,5 +96,6 @@ public class SettingsService {
         globalDao.save(getCurrentUserId(), globalSettings);
         hoverDao.save(getCurrentUserId(), hoverSettings);
         holdDao.save(getCurrentUserId(), holdSettings);
+        neuralDao.save(getCurrentUserId(), neuralSettings);
     }
 }

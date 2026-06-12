@@ -39,6 +39,7 @@ public class SceneManager {
     public static final String MORERESULTS = "moreresults";
     public static final String HOVER_SETTINGS = "hover_settings";
     public static final String HOLD_SETTINGS = "hold_settings";
+    public static final String NEURAL_SETTINGS = "neural_settings";
     public static final String SELECTION = "selection";
     public static final String MENU = "menu";
     public static final String STATISTICS = "statistics";
@@ -167,6 +168,11 @@ public class SceneManager {
         loadIntoRegion(HOLD_SETTINGS, "/com/example/move_arm/fxml/hold-settings.fxml", null);
     }
 
+    public void showNeuralSettings() {
+        removeFromCache(NEURAL_SETTINGS);
+        loadIntoRegion(NEURAL_SETTINGS, "/com/example/move_arm/fxml/neural-settings.fxml", null);
+    }
+
     public void showResults() {
         removeFromCache(RESULTS);
         loadIntoRegion(RESULTS, "/com/example/move_arm/fxml/results-view.fxml", null);
@@ -245,7 +251,6 @@ public class SceneManager {
                 AppLogger.info("SceneManager: Создаём NeuralGamePresenter");
                 com.example.move_arm.ui.presenter.NeuralGamePresenter presenter = 
                     new com.example.move_arm.ui.presenter.NeuralGamePresenter(view, this);
-                presenter.startNewGame();
 
             } else {
                 AppLogger.error("SceneManager: Неизвестный контроллер для Neural: " + ctrl);

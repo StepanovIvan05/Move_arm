@@ -40,6 +40,9 @@ public class MenuController {
             else if(Objects.equals(gameType, "hold")){
                 sceneManager.showHoldSettings();
             }
+            else if(Objects.equals(gameType, "neural")){
+                sceneManager.showNeuralSettings();
+            }
         });
 
         // Статистика
@@ -55,6 +58,9 @@ public class MenuController {
             }
             else if(Objects.equals(gameType, "hold")){
                 sceneManager.showHoldGame();
+            }
+            else if(Objects.equals(gameType, "neural")){
+                sceneManager.startNeuralGame();
             }
         });
 

@@ -19,6 +19,8 @@ public class HoverSettingsController extends BaseSettingsController {
     @FXML private VBox seedContainer;
     @FXML private VBox adaptiveContainer;
 
+    @FXML private ComboBox<Integer> seedComboBox;
+
     private final HoverGeneratorOptionsBinder generatorOptionsBinder = new HoverGeneratorOptionsBinder();
 
     @Override
@@ -29,6 +31,10 @@ public class HoverSettingsController extends BaseSettingsController {
     @Override
     protected void initializeSpecific() {
         HoverGameSettings hoverSettings = (HoverGameSettings) settings;
+
+        // ---------- Seed ----------
+        seedComboBox.getItems().setAll(0, 1, 67, 123, 999, 2024);
+        seedComboBox.setValue(hoverSettings.getSeed());
 
         generatorOptionsBinder
                 .register(GeneratorType.RANDOM, seedContainer)

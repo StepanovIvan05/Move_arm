@@ -24,7 +24,6 @@ public abstract class BaseSettingsController {
 
     @FXML protected Pane previewRoot;
     @FXML protected Circle previewCircle;
-    @FXML protected ComboBox<Integer> seedComboBox;
 
     protected SceneManager sceneManager;
     protected SettingsService settingsService = SettingsService.getInstance();
@@ -49,10 +48,6 @@ public abstract class BaseSettingsController {
         radiusSlider.setValue(settings.getRadius());
         previewCircle.setRadius(settings.getRadius());
         updateRadiusLabel(settings.getRadius());
-
-        // ---------- Seed ----------
-        seedComboBox.getItems().setAll(0, 1, 67, 123, 999, 2024);
-        seedComboBox.setValue(settings.getSeed());
 
         radiusSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
             int snapped = ((int) Math.round(newVal.doubleValue() / 10)) * 10;
@@ -96,7 +91,6 @@ public abstract class BaseSettingsController {
     @FXML
     protected void handleSaveAndExit() {
         settings.setRadius((int) radiusSlider.getValue());
-        settings.setSeed(seedComboBox.getValue());
         settingsService.setAnimationType(animationTypeComboBox.getValue());
 
         saveSpecificSettings();   // <-- наследник сохраняет своё

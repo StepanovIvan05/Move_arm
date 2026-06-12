@@ -155,6 +155,15 @@ public class DatabaseManager {
                     );
                     """);
             s.execute("""
+                    CREATE TABLE IF NOT EXISTS neural_settings (
+                    user_id INTEGER PRIMARY KEY,
+                    duration_seconds INTEGER NOT NULL,
+                    radius INTEGER NOT NULL,
+                    max_circles_count INTEGER NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                    );
+                    """);
+            s.execute("""
                 CREATE TABLE IF NOT EXISTS target_triplets (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER,
