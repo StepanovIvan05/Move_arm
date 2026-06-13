@@ -190,7 +190,8 @@ public class DatabaseManager {
                     previous_hit_cell INTEGER DEFAULT -1
                 );
                 """);
-                s.execute("""
+
+            s.execute("""
                     INSERT OR IGNORE INTO game_types(name, description)
                     VALUES ('neural', 'Neural RL training mode');
                 """);

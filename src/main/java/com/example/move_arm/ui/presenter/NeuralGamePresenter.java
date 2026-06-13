@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.example.move_arm.model.ClickData;
 import com.example.move_arm.model.TripletRecord;
 import com.example.move_arm.model.settings.NeuralGameSettings;
 import com.example.move_arm.service.GameService;
@@ -43,9 +44,12 @@ public class NeuralGamePresenter {
 
     private int lastHitCell = -1;
 
-    // Буфер данных для пакетной записи в БД
+    // Буфер данных для пакетной записи в БД (neural triplets)
     private final List<TripletRecord> gameBuffer = new ArrayList<>();
     private int tripletCounter = 0;
+
+    // Буфер данных для пакетной записи в БД (neural clicks как hover-clicks)
+    private final List<ClickData> clickData = new ArrayList<>();
 
     private final Random random = new Random();
 
@@ -89,6 +93,7 @@ public class NeuralGamePresenter {
         remainingTime = settings.getDurationSeconds();
         lastHitCell = -1;
         gameBuffer.clear();
+        clickData.clear();
         tripletCounter = 0;
         generator.reset();
 
@@ -129,14 +134,16 @@ public class NeuralGamePresenter {
         if (!gameActive) return;
 
         int clickedCell = event.cellIndex();
-        
+
         // Получаем ячейки, которые ОСТАЛИСЬ на экране (их должно быть ровно 2)
         List<TargetCell> remainingTargets = view.getActiveTargetsWithCells();
-        
+
         if (remainingTargets.size() < 2) {
             AppLogger.info("NeuralGamePresenter: Критическая ошибка, на поле осталось меньше 2 целей!");
             return;
         }
+
+        long gameTimeMs = (System.nanoTime() - gameStartTimeNs);
 
         score++;
         view.setScore(score);
@@ -144,7 +151,7 @@ public class NeuralGamePresenter {
 
         // Честное восстановление исходных ролей целей для БД на основе генератора логов
         NeuralTripletGenerator.TripletData lastGenData = generator.getLastData();
-        
+
         int t1, t2, t3;
         int hitTargetIndex = 0;
 
@@ -152,7 +159,7 @@ public class NeuralGamePresenter {
             t1 = lastGenData.t1Cell;
             t2 = lastGenData.t2Cell;
             t3 = lastGenData.t3Cell;
-            
+
             if (clickedCell == t1) hitTargetIndex = 0;
             else if (clickedCell == t2) hitTargetIndex = 1;
             else if (clickedCell == t3) hitTargetIndex = 2;
@@ -172,9 +179,9 @@ public class NeuralGamePresenter {
         rec.t1Cell = t1;
         rec.t2Cell = t2;
         rec.t3Cell = t3;
-        rec.hitTargetIndex = hitTargetIndex; 
+        rec.hitTargetIndex = hitTargetIndex;
         rec.hitTtkNs = event.lifetimeNs();
-        rec.spawnNs = System.nanoTime(); 
+        rec.spawnNs = System.nanoTime();
         rec.radius = radius;
         rec.screenWidth = (int) view.getWidth();
         rec.screenHeight = (int) view.getHeight();
@@ -191,6 +198,21 @@ public class NeuralGamePresenter {
 
         gameBuffer.add(rec);
         AppLogger.info("NeuralGamePresenter: Тройка добавлена в буфер. Всего: " + gameBuffer.size());
+
+        // Собирать клики как в Hover: ClickData (time/cursor/center/radius)
+        // В NeuralHitEvent есть только cellIndex; поэтому используем координаты ячеек.
+        // cursor/center в hover — это позиция курсора и центр круга.
+        // Для neural делаем: cursor = центр "попавшей" клетки, center = центр той же клетки.
+        double[] xy = GridUtils.cellToXy(clickedCell, view.getWidth(), view.getHeight());
+
+        clickData.add(new ClickData(
+                gameTimeMs,
+                event.cursorX(),
+                event.cursorY(),
+                event.targetX(),
+                event.targetY(),
+                radius
+        ));
 
         lastHitCell = clickedCell;
 
@@ -237,6 +259,19 @@ public class NeuralGamePresenter {
 
         gameService.saveTripletsBatch(gameBuffer);
         AppLogger.info("NeuralGamePresenter: Сохранено в БД: " + gameBuffer.size() + " троек");
+
+        // Сохранение neural clicks как в hover:
+        // В проекте сейчас нет seed/difficulty/generatorType для neural (NeuralGameSettings пустой),
+        // поэтому используем значения по умолчанию, как это делает ClickGameService через ADAPTIVE/seed/difficulty.
+        // Если для neural в будущем появятся параметры — сюда нужно будет подставить их.
+        gameService.addGameClicks(
+                radius,
+                0, // seed недоступен для neural в текущей модели
+                com.example.move_arm.model.TrajectoryDifficulty.MEDIUM,
+                new ArrayList<>(clickData)
+        );
+
+        AppLogger.info("NeuralGamePresenter: Сохранено в БД: " + clickData.size() + " neural кликов (как hover)");
     }
 
     private void restartGame() {

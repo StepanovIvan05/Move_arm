@@ -93,36 +93,33 @@ public class ResultsController {
     }
 
     // --- МЕТОД ДЛЯ NEURAL РЕЖИМА ---
+    // Neural клики сохраняются в ту же структуру (clicks) через ClickGameService,
+    // поэтому отображение должно быть как у Hover (обычный режим кликов).
     private void showNeuralResults(GameResult last) {
+        List<ClickData> clicks = clickDao.readClicksForResult(last.getId());
         useAutoLegend();
-        
-        // Для Neural режима График: прогрессия попаданий по времени
-        XYChart.Series<Number, Number> scoreSeries = new XYChart.Series<>();
-        scoreSeries.setName("Накопленные попадания");
-        
-        int totalScore = last.getScore();
-        long durationMs = last.getDurationMs();
-        
-        // Добавляем точки с реальным прогрессом
-        if (totalScore > 0) {
-            double timePerPoint = (double) durationMs / totalScore;
-            for (int i = 0; i <= totalScore; i++) {
-                double timeSec = (i * timePerPoint) / 1000.0;
-                scoreSeries.getData().add(new XYChart.Data<>(timeSec, i));
-            }
+        if (clicks == null || clicks.isEmpty()) {
+            statsGrid.add(new Label("Нет кликов для последней игры."), 0, 0);
+            return;
         }
-        
+
+        XYChart.Series<Number, Number> scoreSeries = new XYChart.Series<>();
+        scoreSeries.setName("Очки во времени");
+
+        for (int i = 0; i < clicks.size(); i++) {
+            ClickData c = clicks.get(i);
+            double timeSec = c.getClickTimeNs() / 1_000_000_000.0;
+            scoreSeries.getData().add(new XYChart.Data<>(timeSec, i + 1));
+        }
+
         scoreChart.getData().add(scoreSeries);
-        setupAxes("Время (сек)", "Накопленные попадания");
-        
-        // Заполняем таблицу статистики
-        double avgIntervalMs = durationMs > 0 ? (double) durationMs / totalScore : 0;
-        double frequency = durationMs > 0 ? (totalScore * 1000.0) / durationMs : 0;
-        
-        addStatRow("Всего попаданий:", String.valueOf(totalScore), 0);
-        addStatRow("Длительность (сек):", String.format("%.1f", durationMs / 1000.0), 1);
-        addStatRow("Средний интервал (мс):", String.format("%.2f", avgIntervalMs), 2);
-        addStatRow("Частота (попаданий/сек):", String.format("%.2f", frequency), 3);
+        setupAxes("Время (сек)", "Очки");
+        addStatRow("Результат (Очки/Успехи):", String.valueOf(last.getScore()), 0);
+        addStatRow("Длительность (ms):", String.valueOf(last.getDurationMs()), 1);
+        addStatRow("Ср. интервал (ms):", String.format("%.2f", last.getAvgIntervalMs()), 2);
+        addStatRow("Ср. расстояние (px):", String.format("%.2f", last.getAvgDistancePx()), 3);
+        addStatRow("Ср. скорость (px/ms):", String.format("%.4f", last.getAvgSpeed()), 4);
+        addStatRow("Точность (%):", String.format("%.2f", last.getHitRate()), 5);
     }
 
     private void showHoldResults(GameResult last) {

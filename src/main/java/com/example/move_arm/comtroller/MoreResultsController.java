@@ -61,7 +61,7 @@ public class MoreResultsController {
 
         if ("neural".equalsIgnoreCase(gameService.getCurrentGameTypeString())) {
             modeLabel.setText("Режим: Neural");
-            showNeuralResults(last);
+            showHoverResults(last);
         } else if ("hold".equals(gameService.getCurrentGameTypeString())) {
             modeLabel.setText("Режим: Hold");
             showHoldResults(last);
@@ -158,43 +158,6 @@ public class MoreResultsController {
         ((NumberAxis)normalizedDeviationChart.getYAxis()).setLabel("Нормализованное отклонение");
     }
 
-    // ========================= NEURAL RESULTS =========================
-
-    private void showNeuralResults(GameResult last) {
-        int resultId = last.getId();
-        long durationMs = last.getDurationMs();
-        int totalScore = last.getScore();
-
-        // Базовая статистика Neural режима
-        summaryTable.add(new Label("Всего попаданий:"), 0, 0);
-        summaryTable.add(new Label(String.valueOf(totalScore)), 1, 0);
-
-        summaryTable.add(new Label("Длительность (сек):"), 0, 1);
-        summaryTable.add(new Label(String.format("%.1f", durationMs / 1000.0)), 1, 1);
-
-        double avgIntervalMs = durationMs > 0 ? (double) durationMs / totalScore : 0;
-        summaryTable.add(new Label("Средний интервал (мс):"), 0, 2);
-        summaryTable.add(new Label(String.format("%.2f", avgIntervalMs)), 1, 2);
-
-        double frequency = durationMs > 0 ? (totalScore * 1000.0) / durationMs : 0;
-        summaryTable.add(new Label("Частота (попаданий/сек):"), 0, 3);
-        summaryTable.add(new Label(String.format("%.2f", frequency)), 1, 3);
-
-        // График: прогрессия попаданий по времени
-        XYChart.Series<Number, Number> hitsTimeSeries = new XYChart.Series<>();
-        hitsTimeSeries.setName("Прогрессия попаданий");
-        if (totalScore > 0) {
-            for (int i = 0; i <= totalScore; i++) {
-                double timeSec = (i * avgIntervalMs) / 1000.0;
-                hitsTimeSeries.getData().add(new XYChart.Data<>(timeSec, i));
-            }
-        }
-        clickIntervalsChart.getData().add(hitsTimeSeries);
-        ((NumberAxis)clickIntervalsChart.getXAxis()).setLabel("Время (сек)");
-        ((NumberAxis)clickIntervalsChart.getYAxis()).setLabel("Накопленные попадания");
-
-        // Остальные графики остаются пустыми (neural не собирает детальные данные как hover)
-    }
 
     // ========================= HOLD RESULTS =========================
 

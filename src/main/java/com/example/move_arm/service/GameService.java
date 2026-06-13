@@ -139,6 +139,8 @@ public class GameService {
     public void saveTripletsBatch(List<TripletRecord> records) {
         neuralTripletService.saveTripletsBatch(records);
     }
+
+
     public void setCurrentGameTypeToNeural() {
         gameTypeService.setCurrentGameTypeString("neural"); // или как у тебя хранится
     }
