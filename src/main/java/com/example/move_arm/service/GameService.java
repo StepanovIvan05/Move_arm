@@ -67,11 +67,12 @@ public class GameService {
         );
     }
 
-    public int addHoldGameResults(int radius, List<HoldAttempt> attempts) {
+    public int addHoldGameResults(int radius, int seed, List<HoldAttempt> attempts) {
         int resultId = holdGameService.saveHoldResults(
                 userService.getCurrentUser().getId(),
                 gameTypeService.getCurrentGameTypeId(),
                 radius,
+                seed,
                 attempts
         );
         cacheService.storeHoldAttempts(attempts);

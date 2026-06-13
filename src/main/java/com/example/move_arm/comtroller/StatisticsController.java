@@ -8,6 +8,7 @@ import com.example.move_arm.model.TrajectoryDifficulty;
 import com.example.move_arm.model.settings.HoverGameSettings;
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.service.SettingsService;
+import com.example.move_arm.util.AppLogger;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -18,6 +19,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 
 import java.util.List;
 
@@ -33,6 +35,8 @@ public class StatisticsController {
     @FXML private ComboBox<TrajectoryDifficulty> difficultyComboBox;
     @FXML private VBox seedContainer;
     @FXML private VBox adaptiveContainer;
+    @FXML private VBox generatorTypeContainer;
+    @FXML private StackPane generatorOptionsContainer;
 
     private int seed = 67;
     private TrajectoryDifficulty difficulty = TrajectoryDifficulty.MEDIUM;
@@ -52,24 +56,53 @@ public class StatisticsController {
     @FXML
     public void initialize() {
         HoverGameSettings hoverSettings = settingsService.getHoverSettings();
-        if (hoverSettings != null) {
+        if (hoverSettings != null && "hover".equalsIgnoreCase(gameService.getCurrentGameTypeString())) {
             seed = hoverSettings.getSeed();
             difficulty = hoverSettings.getDifficulty();
             generatorType = hoverSettings.getGeneratorType();
             radius = hoverSettings.getRadius();
         }
 
-        // Для neural режима — отключаем элементы управления
+        // Для neural режима — оставляем только регулировку по радиусу
         String currentGameType = gameService.getCurrentGameTypeString();
-        if ("neural".equalsIgnoreCase(currentGameType)) {
-            radiusSlider.setDisable(true);
+        boolean isNeural = "neural".equalsIgnoreCase(currentGameType);
+        boolean isHold = "hold".equalsIgnoreCase(currentGameType);
+        AppLogger.info("StatisticsController: currentGameType = " + currentGameType + ", isNeural = " + isNeural);
+        if (isNeural) {
+
+            // скрываем/выключаем родителя для "Тип генератора"
             generatorTypeComboBox.setDisable(true);
+            if (generatorTypeContainer != null) {
+                generatorTypeContainer.setVisible(false);
+                generatorTypeContainer.setManaged(false);
+            }
+
+            generatorOptionsContainer.setVisible(false);
+
+            // скрываем/выключаем родителя для "Сид" (VBox seedContainer)
             seedComboBox.setDisable(true);
+            if (seedContainer != null) {
+                seedContainer.setVisible(false);
+                seedContainer.setManaged(false);
+            }
+
+            // скрываем/выключаем родителя для "Сложность" (VBox adaptiveContainer)
             difficultyComboBox.setDisable(true);
-            statsGrid.add(new Label("Neural режим не имеет настроек для статистики"), 0, 0);
-            scoresChart.setVisible(false);
-            return;
+            if (adaptiveContainer != null) {
+                adaptiveContainer.setVisible(false);
+                adaptiveContainer.setManaged(false);
+            }
+
+            // в UI сохраняем только радиус
         }
+        if (isHold) {
+            generatorType = GeneratorType.RANDOM;
+            if (generatorTypeContainer != null) {
+                generatorTypeContainer.setManaged(false);
+            }
+
+        }
+
 
         radiusLabel.setText(String.valueOf(radius));
 
@@ -145,66 +178,29 @@ public class StatisticsController {
             return;
         }
 
-        if ("neural".equalsIgnoreCase(currentGameType)) {
-            // Neural режим: статистика по радиусу
-            List<GameResult> neuralResults = results.stream()
-                .filter(r -> r.getRadius() == radius)
-                .toList();
+        List<Integer> ScoresList = gameResultDao.findListScoresByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+        List<Double> intervals = gameResultDao.findListAvgTimesByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
+        double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
+        int bestScore = gameResultDao.findRecordScoreByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
 
-            if (neuralResults.isEmpty()) {
-                statsGrid.add(new Label("Нет данных для этого радиуса"), 0, 0);
-                return;
-            }
+        statsGrid.add(new Label("Рекорд:"), 0, 0);
+        statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
 
-            int bestScore = neuralResults.stream().mapToInt(GameResult::getScore).max().orElse(0);
-            double avgScore = neuralResults.stream().mapToDouble(GameResult::getScore).average().orElse(0.0);
-            double avgFrequency = neuralResults.stream()
-                .mapToDouble(r -> r.getDurationMs() > 0 ? (r.getScore() * 1000.0) / r.getDurationMs() : 0)
-                .average()
-                .orElse(0.0);
+        statsGrid.add(new Label("Среднее количество очков:"), 0, 1);
+        statsGrid.add(new Label(String.format("%.2f", avgScore)), 1, 1);
 
-            statsGrid.add(new Label("Рекорд:"), 0, 0);
-            statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
+        statsGrid.add(new Label("Среднее время между кликами (мс):"), 0, 2);
+        statsGrid.add(new Label(String.format("%.2f", avgIntervalMs)), 1, 2);
 
-            statsGrid.add(new Label("Среднее попаданий:"), 0, 1);
-            statsGrid.add(new Label(String.format("%.1f", avgScore)), 1, 1);
-
-            statsGrid.add(new Label("Средняя частота (попаданий/сек):"), 0, 2);
-            statsGrid.add(new Label(String.format("%.2f", avgFrequency)), 1, 2);
-
-            XYChart.Series<Number, Number> series = new XYChart.Series<>();
-            series.setName("Попадания по играм");
-            int i = 1;
-            for (GameResult r : neuralResults) {
-                series.getData().add(new XYChart.Data<>(i++, r.getScore()));
-            }
-            scoresChart.getData().add(series);
-
-        } else {
-            // Hover/Hold режимы: существующая логика
-            List<Integer> ScoresList = gameResultDao.findListScoresByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
-            List<Double> intervals = gameResultDao.findListAvgTimesByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
-            double avgIntervalMs = intervals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-            double avgScore = ScoresList.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0);
-            int bestScore = gameResultDao.findRecordScoreByGeneratorSettings(gameService.getCurrentUser().getId(), gameService.getCurrentGameTypeId(), radius, generatorType, seed, difficulty);
-
-            statsGrid.add(new Label("Рекорд:"), 0, 0);
-            statsGrid.add(new Label(String.valueOf(bestScore)), 1, 0);
-
-            statsGrid.add(new Label("Среднее количество очков:"), 0, 1);
-            statsGrid.add(new Label(String.format("%.2f", avgScore)), 1, 1);
-
-            statsGrid.add(new Label("Среднее время между кликами (мс):"), 0, 2);
-            statsGrid.add(new Label(String.format("%.2f", avgIntervalMs)), 1, 2);
-
-            XYChart.Series<Number, Number> series = new XYChart.Series<>();
-            series.setName("Очки по играм");
-            int i = 1;
-            for (int r : ScoresList) {
-                series.getData().add(new XYChart.Data<>(i++, r));
-            }
-            scoresChart.getData().add(series);
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        series.setName("Очки по играм");
+        int i = 1;
+        for (int r : ScoresList) {
+            series.getData().add(new XYChart.Data<>(i++, r));
         }
+        scoresChart.getData().add(series);
+    
 
         NumberAxis xAxis = (NumberAxis) scoresChart.getXAxis();
         NumberAxis yAxis = (NumberAxis) scoresChart.getYAxis();

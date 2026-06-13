@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import com.example.move_arm.service.GameService;
 import com.example.move_arm.ui.SceneManager;
-
+import com.example.move_arm.util.AppLogger;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -47,6 +47,7 @@ public class MenuController {
 
         // Статистика
         statsButton.setOnAction(e -> {
+            AppLogger.info("MenuController: statsButton clicked, currentGameType = " + gameService.getCurrentGameTypeString());
             sceneManager.showStatistics();
         });
 
@@ -66,6 +67,7 @@ public class MenuController {
 
         // Вернуться к выбору игры
         selectGameButton.setOnAction(e -> {
+            sceneManager.clearCache();
             sceneManager.showSelection();
         });
 

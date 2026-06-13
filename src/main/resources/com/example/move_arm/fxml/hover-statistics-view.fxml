@@ -33,7 +33,7 @@
                 <Label fx:id="radiusLabel" text="50"/>
             </HBox>
 
-            <VBox spacing="8" alignment="CENTER">
+            <VBox fx:id="generatorTypeContainer" spacing="8" alignment="CENTER">
                 <Label text="Тип генератора:"/>
                 <ComboBox fx:id="generatorTypeComboBox" prefWidth="220"/>
             </VBox>
