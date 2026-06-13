@@ -68,7 +68,7 @@ public class StatisticsController {
         boolean isNeural = "neural".equalsIgnoreCase(currentGameType);
         boolean isHold = "hold".equalsIgnoreCase(currentGameType);
         AppLogger.info("StatisticsController: currentGameType = " + currentGameType + ", isNeural = " + isNeural);
-        if (isNeural) {
+        if (isNeural || isHold) {
 
             // скрываем/выключаем родителя для "Тип генератора"
             generatorTypeComboBox.setDisable(true);
@@ -95,13 +95,7 @@ public class StatisticsController {
 
             // в UI сохраняем только радиус
         }
-        if (isHold) {
-            generatorType = GeneratorType.RANDOM;
-            if (generatorTypeContainer != null) {
-                generatorTypeContainer.setManaged(false);
-            }
 
-        }
 
 
         radiusLabel.setText(String.valueOf(radius));

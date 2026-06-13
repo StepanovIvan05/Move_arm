@@ -13,7 +13,6 @@ public class HoldSettingsController extends BaseSettingsController {
     @FXML private Slider holdTimeSlider;
     @FXML private Label holdTimeValueLabel;
 
-    @FXML private ComboBox<Integer> seedComboBox;
 
     private HoldGameSettings holdSettings;
 
@@ -25,10 +24,7 @@ public class HoldSettingsController extends BaseSettingsController {
 
     @Override
     protected void initializeSpecific() {
-        // Seed
-        seedComboBox.getItems().setAll(0, 1, 67, 123, 999, 2024);
-        seedComboBox.setValue(holdSettings.getSeed());
-
+        
         // Время удержания: 100–2000 мс, шаг 100
         holdTimeSlider.setMin(100);
         holdTimeSlider.setMax(2000);
@@ -51,7 +47,6 @@ public class HoldSettingsController extends BaseSettingsController {
     @Override
     protected void saveSpecificSettings() {
         holdSettings.setHoldTimeMs((int) holdTimeSlider.getValue());
-        holdSettings.setSeed(seedComboBox.getValue());
     }
 
     private void updateHoldTimeLabel(int value) {

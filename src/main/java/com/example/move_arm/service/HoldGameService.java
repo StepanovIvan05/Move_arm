@@ -14,7 +14,7 @@ public class HoldGameService {
     private final GameResultDao gameResultDao = new GameResultDao();
     private final HoldAttemptDao holdAttemptDao = new HoldAttemptDao();
 
-    public int saveHoldResults(int userId, int gameTypeId, int radius, int seed, List<HoldAttempt> attempts) {
+    public int saveHoldResults(int userId, int gameTypeId, int radius, List<HoldAttempt> attempts) {
 
         if (attempts == null || attempts.isEmpty()) return -1;
 
@@ -26,8 +26,6 @@ public class HoldGameService {
         result.setGameTypeId(gameTypeId);
         result.setRadius(radius);
         result.setScore((int) successCount);
-        result.setGeneratorType(GeneratorType.RANDOM);
-        result.setSeed(seed);
 
         long first = attempts.get(0).getStartTimeNs();
         long last = attempts.get(attempts.size() - 1).getEndTimeNs();

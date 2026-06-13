@@ -167,7 +167,11 @@ public class ResultsController {
         }
 
         setupAxes("Попытка №", "Время (ms)");
-        fillStatsTable(last);
+        addStatRow("Результат (Очки/Успехи):", String.valueOf(last.getScore()), 0);
+        addStatRow("Длительность (ms):", String.valueOf(last.getDurationMs()), 1);
+        addStatRow("Ср. интервал (ms):", String.format("%.2f", last.getAvgIntervalMs()), 2);
+        addStatRow("Точность (%):", String.format("%.2f", last.getHitRate()), 3);
+
         
         // Вызываем покраску (теперь она необходима, чтобы все сегменты 
         // одного типа были одного цвета)

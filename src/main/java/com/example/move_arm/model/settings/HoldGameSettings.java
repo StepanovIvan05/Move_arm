@@ -7,7 +7,4 @@ public class HoldGameSettings extends BaseSettings{
 
     public int getHoldTimeMs() { return holdTimeMs; }
     public void setHoldTimeMs(int holdTimeMs) { this.holdTimeMs = holdTimeMs; }
-    
-    public int getSeed(){return this.seed;}
-    public void setSeed(int seed) {this.seed = seed;}
 }

@@ -226,7 +226,7 @@ public class HoldGamePresenter {
         view.clearField();
 
         try {
-            int savedId = gameService.addHoldGameResults(settings.getRadius(), settings.getSeed(), new ArrayList<>(allAttempts));
+            int savedId = gameService.addHoldGameResults(settings.getRadius(), new ArrayList<>(allAttempts));
             AppLogger.info("Hold game result saved, id=" + savedId);
         } catch (Exception e) {
             AppLogger.error("Failed to save hold game result", e);
