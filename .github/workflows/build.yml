@@ -36,9 +36,9 @@ jobs:
           jpackage ^
             --input target ^
             --main-jar Move_arm-1.0-SNAPSHOT.jar ^
-            --main-class com.example.move_arm.Launcher ^
+            --main-class com.example.move_arm.app.Launcher ^
             --name "MoveArm" ^
-            --app-version "2.1.4" ^
+            --app-version "2.1.5" ^
             --type exe ^
             --dest output ^
             --vendor "MoveArm Team" ^
